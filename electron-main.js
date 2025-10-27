@@ -7,16 +7,14 @@ const os = require("os");
 let mainWindow;
 let backendProcess;
 let frontendProcess;
-let scheduledBackupProcess;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, "electron-preload.js"),
+      nodeIntegration: true,
+      contextIsolation: false,
     },
     icon: path.join(__dirname, "src/assets/icon.png"),
   });
@@ -37,9 +35,6 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
-
-  // Start scheduled backup system
-  startScheduledBackups();
 });
 
 app.on("window-all-closed", () => {
@@ -51,54 +46,9 @@ app.on("window-all-closed", () => {
     if (frontendProcess) {
       frontendProcess.kill();
     }
-    if (scheduledBackupProcess) {
-      scheduledBackupProcess.kill();
-    }
     app.quit();
   }
 });
-
-// Function to get network interfaces
-function getNetworkInterfaces() {
-  const interfaces = os.networkInterfaces();
-  const addresses = [];
-
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      // Skip internal (loopback) and IPv6 addresses
-      if (!iface.internal && iface.family === "IPv4") {
-        addresses.push(iface.address); // Return just the IP address, not the full URL
-      }
-    }
-  }
-
-  // Add localhost as fallback
-  addresses.push("localhost");
-
-  return addresses;
-}
-
-// Start scheduled backup system
-function startScheduledBackups() {
-  scheduledBackupProcess = spawn("node", ["scripts/scheduled-backup.cjs"], {
-    cwd: __dirname,
-    shell: true,
-  });
-
-  scheduledBackupProcess.stdout.on("data", (data) => {
-    console.log(`[Scheduled Backup] ${data}`);
-    if (mainWindow) {
-      mainWindow.webContents.send("backup-schedule-output", data.toString());
-    }
-  });
-
-  scheduledBackupProcess.stderr.on("data", (data) => {
-    console.error(`[Scheduled Backup Error] ${data}`);
-    if (mainWindow) {
-      mainWindow.webContents.send("backup-schedule-error", data.toString());
-    }
-  });
-}
 
 // IPC handlers for starting/stopping the application
 ipcMain.handle("start-app", async () => {
@@ -157,16 +107,6 @@ ipcMain.handle("stop-app", async () => {
   }
 });
 
-// IPC handler to get network interfaces
-ipcMain.handle("get-network-interfaces", async () => {
-  try {
-    const interfaces = getNetworkInterfaces();
-    return { success: true, interfaces };
-  } catch (error) {
-    return { success: false, message: error.message };
-  }
-});
-
 // IPC handler for backup
 ipcMain.handle("create-backup", async () => {
   try {
@@ -182,18 +122,6 @@ ipcMain.handle("create-backup", async () => {
     if (!filePath) {
       return { success: false, message: "Backup cancelled" };
     }
-
-    // Show backup information before starting
-    mainWindow.webContents.send("backup-output", "Creating database backup...");
-    mainWindow.webContents.send(
-      "backup-output",
-      "This backup includes all your cafe data: orders, inventory, staff, and settings."
-    );
-    mainWindow.webContents.send("backup-output", "Backup file: " + filePath);
-    mainWindow.webContents.send(
-      "backup-output",
-      "Estimated time: 10-30 seconds depending on data size..."
-    );
 
     // Run our backup script
     const backupProcess = spawn("npm", ["run", "db:backup", filePath], {
@@ -217,22 +145,6 @@ ipcMain.handle("create-backup", async () => {
     return new Promise((resolve) => {
       backupProcess.on("close", (code) => {
         if (code === 0) {
-          mainWindow.webContents.send(
-            "backup-output",
-            "✅ Backup completed successfully!"
-          );
-          mainWindow.webContents.send(
-            "backup-output",
-            "📁 Backup saved to: " + filePath
-          );
-          mainWindow.webContents.send(
-            "backup-output",
-            "🔒 Remember to store this file in a secure location."
-          );
-          mainWindow.webContents.send(
-            "backup-output",
-            "📚 For backup best practices, see the Backup section in README.md"
-          );
           resolve({
             success: true,
             message: `Backup created successfully at ${filePath}`,
@@ -247,5 +159,28 @@ ipcMain.handle("create-backup", async () => {
     });
   } catch (error) {
     return { success: false, message: `Backup failed: ${error.message}` };
+  }
+});
+
+// Add this new IPC handler for getting network interfaces
+ipcMain.handle("get-network-interfaces", async () => {
+  try {
+    const networkInterfaces = os.networkInterfaces();
+    const ipAddresses = [];
+
+    // Extract IP addresses from all network interfaces
+    for (const interfaceName in networkInterfaces) {
+      const interfaces = networkInterfaces[interfaceName];
+      for (const iface of interfaces) {
+        // Skip internal (loopback) and IPv6 addresses
+        if (!iface.internal && iface.family === "IPv4") {
+          ipAddresses.push(iface.address);
+        }
+      }
+    }
+
+    return { success: true, interfaces: ipAddresses };
+  } catch (error) {
+    return { success: false, message: error.message };
   }
 });

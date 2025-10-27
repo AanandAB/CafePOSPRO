@@ -170,24 +170,47 @@ export const exportLedgerData = query({
 
     const ledger = await ledgerQuery.collect();
 
-    // Convert to CSV format
+    // Get staff information for better reporting
+    const staffMembers = await ctx.db.query("staff").collect();
+    const staffMap = new Map(
+      staffMembers.map((staff) => [staff._id, staff.name])
+    );
+
+    // Convert to CSV format with more accounting details
     const headers = [
+      "Date",
       "Type",
-      "Amount",
       "Category",
       "Description",
-      "Date",
+      "Amount",
+      "Running Balance",
+      "Reference ID",
       "Staff Name",
     ];
 
-    const rows = ledger.map((entry) => [
-      entry.type,
-      entry.amount,
-      entry.category,
-      entry.description,
-      new Date(entry.date).toISOString().split("T")[0],
-      "", // Staff name would need a join with staff table
-    ]);
+    // Sort ledger entries by date
+    ledger.sort((a, b) => a.date - b.date);
+
+    // Calculate running balance
+    let runningBalance = 0;
+    const rows = ledger.map((entry) => {
+      if (entry.type === "income") {
+        runningBalance += entry.amount;
+      } else {
+        runningBalance -= entry.amount;
+      }
+
+      return [
+        new Date(entry.date).toISOString().split("T")[0],
+        entry.type,
+        entry.category,
+        entry.description,
+        entry.amount.toFixed(2),
+        runningBalance.toFixed(2),
+        entry.relatedSaleId || "",
+        staffMap.get(entry.staffId) || "Unknown",
+      ];
+    });
 
     const csvContent = [
       headers.join(","),

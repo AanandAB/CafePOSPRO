@@ -39,29 +39,34 @@ export function StaffManagement() {
             window as any
           ).electronAPI.getNetworkInterfaces();
           if (result.success) {
-            setNetworkInterfaces(result.interfaces);
+            // Add port to each IP address
+            const port = window.location.port || "5173";
+            const interfacesWithPort = result.interfaces.map(
+              (ip: string) => `http://${ip}:${port}`
+            );
+            setNetworkInterfaces(interfacesWithPort);
           } else {
             // Fallback to default interfaces
             setNetworkInterfaces([
-              "http://[YOUR_COMPUTER_IP]:5177",
-              "http://192.168.1.10:5177",
-              "http://192.168.0.10:5177",
+              "http://[YOUR_COMPUTER_IP]:5173",
+              "http://192.168.1.10:5173",
+              "http://192.168.0.10:5173",
             ]);
           }
         } else {
           // Fallback to default interfaces when not in Electron
           setNetworkInterfaces([
-            "http://[YOUR_COMPUTER_IP]:5177",
-            "http://192.168.1.10:5177",
-            "http://192.168.0.10:5177",
+            "http://[YOUR_COMPUTER_IP]:5173",
+            "http://192.168.1.10:5173",
+            "http://192.168.0.10:5173",
           ]);
         }
       } catch (error) {
         // Fallback to default interfaces on error
         setNetworkInterfaces([
-          "http://[YOUR_COMPUTER_IP]:5177",
-          "http://192.168.1.10:5177",
-          "http://192.168.0.10:5177",
+          "http://[YOUR_COMPUTER_IP]:5173",
+          "http://192.168.1.10:5173",
+          "http://192.168.0.10:5173",
         ]);
       } finally {
         setLoadingNetworkInterfaces(false);

@@ -52,6 +52,16 @@ export const addInventoryItem = mutation({
     // For inventory management, we'll allow access to both managers and staff
     // In a production app, you might want more specific permission checking
 
+    // Check if item with this name already exists
+    const existingItem = await ctx.db
+      .query("inventory")
+      .withIndex("by_name", (q) => q.eq("itemName", args.itemName))
+      .first();
+
+    if (existingItem) {
+      throw new Error(`Item "${args.itemName}" already exists in inventory`);
+    }
+
     return await ctx.db.insert("inventory", {
       ...args,
       isActive: true,
@@ -196,5 +206,60 @@ export const seedDefaultCategories = mutation({
     }
 
     return "Default categories created";
+  },
+});
+
+export const removeDuplicateCategories = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // Get all categories
+    const allCategories = await ctx.db.query("categories").collect();
+
+    // Group categories by name
+    const categoriesByName: { [key: string]: any[] } = {};
+    for (const category of allCategories) {
+      const name = category.name;
+      if (!categoriesByName[name]) {
+        categoriesByName[name] = [];
+      }
+      categoriesByName[name].push(category);
+    }
+
+    // For each group with duplicates, keep the first one and delete the rest
+    let deletedCount = 0;
+    for (const name in categoriesByName) {
+      const categories = categoriesByName[name];
+      if (categories.length > 1) {
+        // Keep the first one, delete the rest
+        for (let i = 1; i < categories.length; i++) {
+          await ctx.db.delete(categories[i]._id);
+          deletedCount++;
+        }
+      }
+    }
+
+    return {
+      success: true,
+      message: `Removed ${deletedCount} duplicate categories`,
+    };
+  },
+});
+
+export const toggleInventoryItemStatus = mutation({
+  args: {
+    itemId: v.id("inventory"),
+    isActive: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    // Allow both Convex Auth and custom staff auth
+    // const userId = await getAuthUserId(ctx);
+    // For inventory management, we'll allow access to both managers and staff
+    // In a production app, you might want more specific permission checking
+
+    await ctx.db.patch(args.itemId, {
+      isActive: args.isActive,
+    });
+
+    return { success: true };
   },
 });

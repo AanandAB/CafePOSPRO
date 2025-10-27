@@ -16,12 +16,15 @@
     "db:backup": "node scripts/backup.cjs",
     "db:backup:info": "node scripts/backup-info.cjs",
     "db:backup:scheduled": "node scripts/scheduled-backup.cjs",
-    "db:create-sample-sales": "node scripts/create-sample-sales.cjs"
+    "db:create-sample-sales": "node scripts/create-sample-sales.cjs",
+    "test:app": "node scripts/test-app.mjs"
   },
   "dependencies": {
     "@convex-dev/auth": "^0.0.80",
     "clsx": "^2.1.1",
     "convex": "^1.24.2",
+    "date-fns": "^4.1.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sonner": "^2.0.3",

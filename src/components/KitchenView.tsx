@@ -127,6 +127,14 @@ export function KitchenView() {
                   <p className="text-sm text-gray-600">
                     {new Date(order._creationTime).toLocaleTimeString()}
                   </p>
+                  {/* Display table information if available */}
+                  {order.tableInfo && (
+                    <div className="mt-1">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                        Table {order.tableInfo.tableNumber}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-amber-600">
@@ -148,6 +156,13 @@ export function KitchenView() {
                       <p className="text-sm text-gray-600">
                         Qty: {item.quantity}
                       </p>
+                      {/* Display cooking instructions if available */}
+                      {item.cookingInstructions && (
+                        <p className="text-xs text-amber-700 mt-1">
+                          <span className="font-medium">Note:</span>{" "}
+                          {item.cookingInstructions}
+                        </p>
+                      )}
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <span

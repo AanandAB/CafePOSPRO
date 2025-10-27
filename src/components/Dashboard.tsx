@@ -8,6 +8,8 @@ import { SalesReports } from "./SalesReports";
 import { Analytics } from "./Analytics";
 import { Settings } from "./Settings";
 import { KitchenView } from "./KitchenView";
+import { FeedbackManagement } from "./FeedbackManagement";
+import { ReportsDashboard } from "./ReportsDashboard";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useStaffAuth } from "../contexts/StaffAuthContext";
@@ -168,6 +170,36 @@ export function Dashboard({ currentView }: DashboardProps) {
           );
         }
         return <Settings />;
+      case "feedback":
+        // Feedback management accessible only to managers
+        if (!hasPermission(["manager"])) {
+          return (
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Access Denied
+              </h2>
+              <p className="text-gray-600">
+                You don't have permission to access feedback management.
+              </p>
+            </div>
+          );
+        }
+        return <FeedbackManagement />;
+      case "reports":
+        // Reports accessible only to managers
+        if (!hasPermission(["manager"])) {
+          return (
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Access Denied
+              </h2>
+              <p className="text-gray-600">
+                You don't have permission to access reports.
+              </p>
+            </div>
+          );
+        }
+        return <ReportsDashboard />;
       default:
         return <DashboardOverview />;
     }

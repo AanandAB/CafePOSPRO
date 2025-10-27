@@ -28,6 +28,16 @@ export const addTable = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
+    // Check if table with this number already exists
+    const existingTable = await ctx.db
+      .query("tables")
+      .filter((q) => q.eq(q.field("tableNumber"), args.tableNumber))
+      .first();
+
+    if (existingTable) {
+      throw new Error(`Table ${args.tableNumber} already exists`);
+    }
+
     return await ctx.db.insert("tables", {
       ...args,
       status: "available",
@@ -38,7 +48,11 @@ export const addTable = mutation({
 export const updateTableStatus = mutation({
   args: {
     tableId: v.id("tables"),
-    status: v.union(v.literal("available"), v.literal("occupied"), v.literal("reserved")),
+    status: v.union(
+      v.literal("available"),
+      v.literal("occupied"),
+      v.literal("reserved")
+    ),
     currentOrderId: v.optional(v.id("orders")),
   },
   handler: async (ctx, args) => {

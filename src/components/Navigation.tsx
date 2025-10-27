@@ -23,8 +23,10 @@ export function Navigation({ currentView, onViewChange }: NavigationProps) {
     { id: "inventory", label: "Inventory", icon: "📦" },
     { id: "tables", label: "Tables", icon: "🪑" },
     { id: "staff", label: "Staff", icon: "👥" },
+    { id: "reports", label: "Reports", icon: "📈" },
+    { id: "feedback", label: "Feedback", icon: "💬" },
     { id: "sales", label: "Sales", icon: "💰" },
-    { id: "analytics", label: "Analytics", icon: "📈" },
+    { id: "analytics", label: "Analytics", icon: "🔍" },
     { id: "settings", label: "Settings", icon: "⚙️" },
   ];
 

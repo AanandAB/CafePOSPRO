@@ -77,6 +77,7 @@ const applicationTables = {
         quantity: v.number(),
         unitPrice: v.number(),
         total: v.number(),
+        cookingInstructions: v.optional(v.string()),
         status: v.union(
           v.literal("pending"),
           v.literal("preparing"),
@@ -189,6 +190,33 @@ const applicationTables = {
   })
     .index("by_user", ["userId"])
     .index("by_read", ["read"]),
+
+  // Customer Feedback
+  feedback: defineTable({
+    customerId: v.optional(v.id("staff")), // For authenticated customers, if applicable
+    customerName: v.optional(v.string()), // For anonymous feedback
+    tableId: v.optional(v.id("tables")), // Table reference if feedback is table-specific
+    orderId: v.optional(v.id("orders")), // Order reference if feedback is order-specific
+    rating: v.number(), // Rating from 1-5
+    comment: v.string(), // Feedback comment
+    category: v.union(
+      v.literal("food"),
+      v.literal("service"),
+      v.literal("ambiance"),
+      v.literal("overall"),
+      v.literal("other")
+    ), // Feedback category
+    status: v.union(
+      v.literal("pending"),
+      v.literal("reviewed"),
+      v.literal("resolved")
+    ), // Feedback status
+    timestamp: v.number(), // When feedback was submitted
+  })
+    .index("by_table", ["tableId"])
+    .index("by_order", ["orderId"])
+    .index("by_status", ["status"])
+    .index("by_timestamp", ["timestamp"]),
 };
 
 export default defineSchema({

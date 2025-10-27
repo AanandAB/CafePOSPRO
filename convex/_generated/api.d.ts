@@ -16,8 +16,10 @@ import type {
 import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
 import type * as dataExport from "../dataExport.js";
+import type * as feedback from "../feedback.js";
 import type * as http from "../http.js";
 import type * as inventory from "../inventory.js";
+import type * as ledgerExport from "../ledgerExport.js";
 import type * as notifications from "../notifications.js";
 import type * as orders from "../orders.js";
 import type * as restaurant from "../restaurant.js";
@@ -26,6 +28,7 @@ import type * as sales from "../sales.js";
 import type * as seed from "../seed.js";
 import type * as staff from "../staff.js";
 import type * as tables from "../tables.js";
+import type * as test from "../test.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -39,8 +42,10 @@ declare const fullApi: ApiFromModules<{
   analytics: typeof analytics;
   auth: typeof auth;
   dataExport: typeof dataExport;
+  feedback: typeof feedback;
   http: typeof http;
   inventory: typeof inventory;
+  ledgerExport: typeof ledgerExport;
   notifications: typeof notifications;
   orders: typeof orders;
   restaurant: typeof restaurant;
@@ -49,6 +54,7 @@ declare const fullApi: ApiFromModules<{
   seed: typeof seed;
   staff: typeof staff;
   tables: typeof tables;
+  test: typeof test;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
