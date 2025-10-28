@@ -60,3 +60,29 @@ export const updateTableStatus = mutation({
     await ctx.db.patch(tableId, updates);
   },
 });
+
+export const deleteTable = mutation({
+  args: {
+    tableId: v.id("tables"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    // Check if table has active orders
+    const table = await ctx.db.get(args.tableId);
+    if (!table) {
+      throw new Error("Table not found");
+    }
+
+    // Don't allow deletion of occupied tables
+    if (table.status === "occupied") {
+      throw new Error(
+        "Cannot delete occupied table. Please clear the table first."
+      );
+    }
+
+    // Delete the table
+    await ctx.db.delete(args.tableId);
+  },
+});

@@ -16,6 +16,7 @@ export function TableManagement() {
   const addTable = useMutation(api.tables.addTable);
   const updateTableStatus = useMutation(api.tables.updateTableStatus);
   const clearTableOrders = useMutation(api.orders.clearTableOrders);
+  const deleteTable = useMutation(api.tables.deleteTable);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +39,44 @@ export function TableManagement() {
       toast.success("Table status updated");
     } catch (error) {
       toast.error("Failed to update table status");
+    }
+  };
+
+  const handleDeleteTable = async (tableId: string, tableNumber: string) => {
+    if (
+      window.confirm(
+        `Are you sure you want to delete Table ${tableNumber}? This action cannot be undone.`
+      )
+    ) {
+      try {
+        await deleteTable({ tableId: tableId as any });
+        toast.success(`Table ${tableNumber} has been deleted successfully`);
+      } catch (error: any) {
+        // Check if it's the specific error about occupied tables
+        if (
+          error.message &&
+          error.message.includes("Cannot delete occupied table")
+        ) {
+          toast.error(
+            `Cannot delete Table ${tableNumber} because it is currently occupied. Please clear the table first, then try again.`,
+            {
+              duration: 10000, // Show for 10 seconds
+              action: {
+                label: "Clear Table",
+                onClick: () => {
+                  // Find the table to get its data
+                  const table = tables?.find((t) => t._id === tableId);
+                  if (table) {
+                    void handleLeaveTable(tableId, table.tableNumber);
+                  }
+                },
+              },
+            }
+          );
+        } else {
+          toast.error(error.message || "Failed to delete table");
+        }
+      }
     }
   };
 
@@ -239,6 +278,16 @@ export function TableManagement() {
                     Clear Table
                   </button>
                 )}
+
+                {/* Delete Table Button */}
+                <button
+                  onClick={() => {
+                    void handleDeleteTable(table._id, table.tableNumber);
+                  }}
+                  className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
+                >
+                  Delete Table
+                </button>
               </div>
             </div>
           </div>
