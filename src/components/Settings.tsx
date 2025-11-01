@@ -179,6 +179,41 @@ export function Settings() {
     }
   };
 
+  const [systemSettings, setSystemSettings] = useState({
+    autoDownloadBills: false,
+    printBillsAutomatically: false,
+    notificationSound: true,
+    lowStockAlerts: true,
+  });
+
+  // Load system settings from localStorage
+  React.useEffect(() => {
+    const savedSettings = localStorage.getItem("systemSettings");
+    if (savedSettings) {
+      try {
+        setSystemSettings(JSON.parse(savedSettings));
+      } catch (e) {
+        console.error("Failed to parse system settings", e);
+      }
+    }
+  }, []);
+
+  // Save system settings to localStorage
+  const saveSystemSettings = (settings: any) => {
+    try {
+      localStorage.setItem("systemSettings", JSON.stringify(settings));
+      setSystemSettings(settings);
+      toast.success("System settings saved successfully");
+    } catch (e) {
+      toast.error("Failed to save system settings");
+    }
+  };
+
+  const handleSystemSettingsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveSystemSettings(systemSettings);
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
@@ -347,118 +382,119 @@ export function Settings() {
 
       {/* System Settings Tab */}
       {activeTab === "system" && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Tax Settings
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Default Tax Rate (%)
-                </label>
-                <input
-                  type="number"
-                  defaultValue={18}
-                  step="0.01"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Currently set to 18% (GST)
-                </p>
-              </div>
-            </div>
-          </div>
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">
+            System Preferences
+          </h3>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Receipt Settings
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void handleSystemSettingsSubmit(e);
+            }}
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <h4 className="font-medium text-gray-900">
-                    Print Receipt Automatically
-                  </h4>
+                  <h4 className="font-medium text-gray-900">Auto Download Bills</h4>
                   <p className="text-sm text-gray-600">
-                    Auto-print receipt when order is completed
+                    Automatically download bill copies to device
                   </p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
+                    checked={systemSettings.autoDownloadBills}
+                    onChange={(e) =>
+                      setSystemSettings({
+                        ...systemSettings,
+                        autoDownloadBills: e.target.checked,
+                      })
+                    }
                     className="sr-only peer"
-                    defaultChecked
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
                 </label>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <h4 className="font-medium text-gray-900">
-                    Show GST Details
-                  </h4>
+                  <h4 className="font-medium text-gray-900">Print Bills Automatically</h4>
                   <p className="text-sm text-gray-600">
-                    Display GST breakdown on receipts
+                    Automatically print bills when order is completed
                   </p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
+                    checked={systemSettings.printBillsAutomatically}
+                    onChange={(e) =>
+                      setSystemSettings({
+                        ...systemSettings,
+                        printBillsAutomatically: e.target.checked,
+                      })
+                    }
                     className="sr-only peer"
-                    defaultChecked
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Notifications
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium text-gray-900">
-                    Low Stock Alerts
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    Get notified when items are running low
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    defaultChecked
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
                 </label>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <h4 className="font-medium text-gray-900">
-                    Order Notifications
-                  </h4>
+                  <h4 className="font-medium text-gray-900">Notification Sounds</h4>
                   <p className="text-sm text-gray-600">
-                    Sound alerts for new orders
+                    Play sounds for notifications and alerts
                   </p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
+                    checked={systemSettings.notificationSound}
+                    onChange={(e) =>
+                      setSystemSettings({
+                        ...systemSettings,
+                        notificationSound: e.target.checked,
+                      })
+                    }
                     className="sr-only peer"
-                    defaultChecked
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <h4 className="font-medium text-gray-900">Low Stock Alerts</h4>
+                  <p className="text-sm text-gray-600">
+                    Show notifications when items are running low
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={systemSettings.lowStockAlerts}
+                    onChange={(e) =>
+                      setSystemSettings({
+                        ...systemSettings,
+                        lowStockAlerts: e.target.checked,
+                      })
+                    }
+                    className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
                 </label>
               </div>
             </div>
-          </div>
+
+            <button
+              type="submit"
+              className="w-full md:w-auto px-6 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors"
+            >
+              Save System Settings
+            </button>
+          </form>
         </div>
       )}
 

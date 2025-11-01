@@ -2,9 +2,11 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
+import { PaymentProcessor } from "./PaymentProcessor";
 
 export function OrderManagement() {
   const [selectedView, setSelectedView] = useState<"all" | "kitchen">("all");
+  const [completingOrderId, setCompletingOrderId] = useState<string | null>(null);
 
   const activeOrders = useQuery(api.orders.getAllActiveOrders);
   const kitchenOrders = useQuery(api.orders.getKitchenOrders);
@@ -67,31 +69,13 @@ export function OrderManagement() {
     }
   };
 
-  const handleCompleteOrder = async (orderId: string) => {
-    try {
-      // Find a cashier or manager to assign the order to
-      const cashiers = staff?.filter(
-        (s) => s.role === "cashier" || s.role === "manager"
-      );
-      const cashierId =
-        cashiers && cashiers.length > 0 ? cashiers[0]._id : null;
+  const handleCompleteOrder = (orderId: string, amount: number) => {
+    setCompletingOrderId(orderId);
+  };
 
-      if (!cashierId) {
-        toast.error(
-          "No cashier available. Please add a cashier or manager first."
-        );
-        return;
-      }
-
-      await completeOrder({
-        orderId: orderId as any,
-        paymentMode: "cash",
-        cashierId: cashierId as any,
-      });
-      toast.success("Order completed");
-    } catch (error) {
-      toast.error("Failed to complete order");
-    }
+  const handlePaymentComplete = () => {
+    setCompletingOrderId(null);
+    toast.success("Order completed and payment processed!");
   };
 
   const getStatusColor = (status: string) => {
@@ -161,130 +145,136 @@ export function OrderManagement() {
               key={order._id}
               className="bg-white rounded-xl p-6 shadow-sm border border-amber-100"
             >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-semibold text-gray-900">
-                    {order.orderNumber}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {new Date(order._creationTime).toLocaleTimeString()}
-                  </p>
-                  {/* Display table information if available */}
-                  {order.tableInfo && (
-                    <div className="mt-1">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                        Table {order.tableInfo.tableNumber}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-amber-600">
-                    ₹{order.finalAmount}
-                  </p>
-                  <span
-                    className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                      order.paymentStatus === "paid"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-yellow-100 text-yellow-800"
-                    }`}
-                  >
-                    {order.paymentStatus}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-3 mb-4">
-                {(selectedView === "kitchen"
-                  ? (order as any).pendingItems
-                  : order.items
-                ).map((item: any, index: number) => (
-                  <div
-                    key={index}
-                    className="flex justify-between items-center bg-gray-50 rounded-lg p-3"
-                  >
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">
-                        {item.itemName}
-                      </h4>
+              {completingOrderId === order._id ? (
+                <PaymentProcessor
+                  orderId={order._id}
+                  amount={order.finalAmount}
+                  onPaymentComplete={handlePaymentComplete}
+                  onCancel={() => setCompletingOrderId(null)}
+                />
+              ) : (
+                <>
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {order.orderNumber}
+                      </h3>
                       <p className="text-sm text-gray-600">
-                        Qty: {item.quantity}
+                        {new Date(order._creationTime).toLocaleTimeString()}
                       </p>
-                      {/* Display cooking instructions if available */}
-                      {item.cookingInstructions && (
-                        <p className="text-xs text-amber-700 mt-1">
-                          <span className="font-medium">Note:</span>{" "}
-                          {item.cookingInstructions}
-                        </p>
+                      {/* Display table information if available */}
+                      {order.tableInfo && (
+                        <div className="mt-1">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                            Table {order.tableInfo.tableNumber}
+                          </span>
+                        </div>
                       )}
                     </div>
-                    <div className="flex flex-col items-end gap-2">
+                    <div className="text-right">
+                      <p className="font-bold text-amber-600">
+                        ₹{order.finalAmount}
+                      </p>
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}
+                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                          order.paymentStatus === "paid"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
                       >
-                        {item.status}
+                        {order.paymentStatus}
                       </span>
-                      {selectedView === "kitchen" &&
-                        item.status !== "served" && (
-                          <div className="flex gap-1">
-                            {item.status === "pending" && (
-                              <button
-                                onClick={() => {
-                                  void handleItemStatusUpdate(
-                                    order._id,
-                                    item.inventoryId,
-                                    "preparing"
-                                  );
-                                }}
-                                className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-                              >
-                                Start
-                              </button>
-                            )}
-                            {item.status === "preparing" && (
-                              <button
-                                onClick={() => {
-                                  void handleItemStatusUpdate(
-                                    order._id,
-                                    item.inventoryId,
-                                    "ready"
-                                  );
-                                }}
-                                className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
-                              >
-                                Ready
-                              </button>
-                            )}
-                            {item.status === "ready" && (
-                              <button
-                                onClick={() => {
-                                  void handleItemStatusUpdate(
-                                    order._id,
-                                    item.inventoryId,
-                                    "served"
-                                  );
-                                }}
-                                className="px-2 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700"
-                              >
-                                Served
-                              </button>
-                            )}
-                          </div>
-                        )}
                     </div>
                   </div>
-                ))}
-              </div>
 
-              {selectedView === "all" && order.paymentStatus === "pending" && (
-                <button
-                  onClick={() => {
-                    void handleCompleteOrder(order._id);
-                  }}
-                  className="w-full bg-green-600 text-white py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
-                >
-                  Complete Order
-                </button>
+                  <div className="space-y-3 mb-4">
+                    {(selectedView === "kitchen"
+                      ? (order as any).pendingItems
+                      : order.items
+                    ).map((item: any) => (
+                      <div
+                        key={`${item.inventoryId}-${item.status}`}
+                        className="flex justify-between items-center p-2 bg-gray-50 rounded"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {item.quantity}x {item.itemName}
+                          </p>
+                          {item.cookingInstructions && (
+                            <p className="text-xs text-gray-600">
+                              Note: {item.cookingInstructions}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {selectedView === "kitchen" ? (
+                            <>
+                              {item.status === "pending" && (
+                                <button
+                                  onClick={() =>
+                                    handleItemStatusUpdate(
+                                      order._id,
+                                      item.inventoryId,
+                                      "preparing"
+                                    )
+                                  }
+                                  className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded hover:bg-blue-200"
+                                >
+                                  Start
+                                </button>
+                              )}
+                              {item.status === "preparing" && (
+                                <button
+                                  onClick={() =>
+                                    handleItemStatusUpdate(
+                                      order._id,
+                                      item.inventoryId,
+                                      "ready"
+                                    )
+                                  }
+                                  className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded hover:bg-green-200"
+                                >
+                                  Ready
+                                </button>
+                              )}
+                              {item.status === "ready" && (
+                                <button
+                                  onClick={() =>
+                                    handleItemStatusUpdate(
+                                      order._id,
+                                      item.inventoryId,
+                                      "served"
+                                    )
+                                  }
+                                  className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded hover:bg-gray-200"
+                                >
+                                  Served
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                                item.status
+                              )}`}
+                            >
+                              {item.status}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {selectedView === "all" && (
+                    <button
+                      onClick={() => handleCompleteOrder(order._id, order.finalAmount)}
+                      className="w-full px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors"
+                    >
+                      Complete Order
+                    </button>
+                  )}
+                </>
               )}
             </div>
           ))}

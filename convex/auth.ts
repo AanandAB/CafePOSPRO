@@ -8,9 +8,30 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   callbacks: {
     // This callback is called after a user is created or updated
     async afterUserCreatedOrUpdated(ctx: any, args: any) {
-      // Here we can perform additional actions after user creation
-      // For example, we could associate the user with a restaurant or set default values
-      // For now, we just return void as required by the callback signature
+      // When a user is created through Convex Auth, we need to also create an entry in the staff table
+      // for managers so they can access staff management features
+      const userId = await getAuthUserId(ctx);
+      if (userId) {
+        const user = await ctx.db.get(userId);
+        if (user && user.email) {
+          // Check if this user already exists in the staff table
+          const existingStaff = await ctx.db
+            .query("staff")
+            .withIndex("by_email", (q: any) => q.eq("email", user.email))
+            .unique();
+          
+          // If not, create a manager entry for them
+          if (!existingStaff) {
+            await ctx.db.insert("staff", {
+              name: user.name || "Manager",
+              email: user.email,
+              role: "manager",
+              isActive: true,
+              joinDate: Date.now(),
+            });
+          }
+        }
+      }
       return;
     },
   },

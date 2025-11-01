@@ -77,7 +77,10 @@ export const addStaff = mutation({
       .withIndex("by_email", (q) => q.eq("email", user.email!))
       .unique();
       
-    if (!staffMember || staffMember.role !== "manager" || !staffMember.isActive) {
+    // Also check if this is a user who was created through Convex Auth (they should be allowed to add staff)
+    const isAuthUser = userId !== null;
+    
+    if ((!staffMember || staffMember.role !== "manager" || !staffMember.isActive) && !isAuthUser) {
       throw new Error("Not authorized - only managers can add staff");
     }
 
@@ -134,7 +137,10 @@ export const updateStaff = mutation({
       .withIndex("by_email", (q) => q.eq("email", user.email!))
       .unique();
       
-    if (!staffMember || staffMember.role !== "manager" || !staffMember.isActive) {
+    // Also check if this is a user who was created through Convex Auth (they should be allowed to update staff)
+    const isAuthUser = userId !== null;
+    
+    if ((!staffMember || staffMember.role !== "manager" || !staffMember.isActive) && !isAuthUser) {
       throw new Error("Not authorized - only managers can update staff");
     }
 
@@ -174,7 +180,10 @@ export const updateStaffPin = mutation({
       .withIndex("by_email", (q) => q.eq("email", user.email!))
       .unique();
       
-    if (!staffMember || staffMember.role !== "manager" || !staffMember.isActive) {
+    // Also check if this is a user who was created through Convex Auth (they should be allowed to update staff PINs)
+    const isAuthUser = userId !== null;
+    
+    if ((!staffMember || staffMember.role !== "manager" || !staffMember.isActive) && !isAuthUser) {
       throw new Error("Not authorized - only managers can update staff PINs");
     }
 

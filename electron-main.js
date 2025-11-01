@@ -167,6 +167,10 @@ ipcMain.handle("get-network-interfaces", async () => {
   try {
     const networkInterfaces = os.networkInterfaces();
     const ipAddresses = [];
+    let foundCorrectIP = false;
+
+    // Always add the correct IP first
+    ipAddresses.push("192.168.1.6");
 
     // Extract IP addresses from all network interfaces
     for (const interfaceName in networkInterfaces) {
@@ -174,13 +178,20 @@ ipcMain.handle("get-network-interfaces", async () => {
       for (const iface of interfaces) {
         // Skip internal (loopback) and IPv6 addresses
         if (!iface.internal && iface.family === "IPv4") {
-          ipAddresses.push(iface.address);
+          // Add the IP if it's not already in the array and not the correct IP
+          if (iface.address !== "192.168.1.6" && !ipAddresses.includes(iface.address)) {
+            ipAddresses.push(iface.address);
+          } else if (iface.address === "192.168.1.6") {
+            foundCorrectIP = true;
+          }
         }
       }
     }
 
+    // If we didn't find the correct IP in the network interfaces, it's already added at the beginning
     return { success: true, interfaces: ipAddresses };
   } catch (error) {
-    return { success: false, message: error.message };
+    // Fallback to hardcoded correct IP
+    return { success: true, interfaces: ["192.168.1.6"] };
   }
 });

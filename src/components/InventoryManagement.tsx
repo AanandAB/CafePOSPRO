@@ -528,17 +528,50 @@ export function InventoryManagement() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Image URL
+                  Image
                 </label>
-                <input
-                  type="text"
-                  value={formData.image}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="https://example.com/image.jpg"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={formData.image}
+                    onChange={(e) =>
+                      setFormData({ ...formData, image: e.target.value })
+                    }
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="https://example.com/image.jpg"
+                  />
+                  <label className="px-3 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors cursor-pointer">
+                    Upload
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          // For now, we'll just show a placeholder URL
+                          // In a real implementation, you would upload to a service like Cloudinary
+                          setFormData({ 
+                            ...formData, 
+                            image: URL.createObjectURL(file) 
+                          });
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+                {formData.image && (
+                  <div className="mt-2">
+                    <img 
+                      src={formData.image} 
+                      alt="Preview" 
+                      className="w-16 h-16 object-cover rounded-lg border border-gray-300"
+                    />
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter URL or upload an image (JPG, PNG, GIF)
+                </p>
               </div>
 
               <div className="flex gap-3 pt-2">

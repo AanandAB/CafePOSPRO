@@ -18,8 +18,8 @@ export function StaffManagement() {
 
   // Get network interfaces for staff access link
   const [networkInterfaces, setNetworkInterfaces] = useState<string[]>([]);
-  const [loadingNetworkInterfaces, setLoadingNetworkInterfaces] =
-    useState(true);
+  const [selectedIP, setSelectedIP] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   const staff = useQuery(api.staff.getAllStaff);
   const addStaff = useMutation(api.staff.addStaff);
@@ -29,151 +29,49 @@ export function StaffManagement() {
   useEffect(() => {
     // Get network interfaces when component mounts
     const getNetworkInterfaces = async () => {
+      setIsLoading(true);
       try {
-        // Try to get network interfaces from Electron
-        if (
-          (window as any).electronAPI &&
-          typeof (window as any).electronAPI.getNetworkInterfaces === "function"
-        ) {
-          const result = await (
-            window as any
-          ).electronAPI.getNetworkInterfaces();
-          if (result.success) {
-            // Add port to each IP address
-            const port = window.location.port || "5173";
-            const interfacesWithPort = result.interfaces.map(
-              (ip: string) => `http://${ip}:${port}`
-            );
-            setNetworkInterfaces(interfacesWithPort);
-            setLoadingNetworkInterfaces(false);
-            return;
-          }
-        }
+        // Hardcode the correct IP for this environment
+        const port = window.location.port || "5173";
+        const correctIP = `http://192.168.1.6:${port}`;
+        const defaultIPs = [
+          correctIP,
+          `http://192.168.1.10:${port}`,
+          `http://192.168.0.10:${port}`,
+          `http://localhost:${port}`
+        ];
         
-        // Fallback to getting actual network interfaces using multiple methods
-        await getActualNetworkInterfaces();
+        setNetworkInterfaces(defaultIPs);
+        setSelectedIP(correctIP);
+        setIsLoading(false);
       } catch (error) {
         console.error("Error getting network interfaces:", error);
-        // Fallback to getting actual network interfaces
-        await getActualNetworkInterfaces();
+        // Fallback to hardcoded IPs
+        const port = window.location.port || "5173";
+        const defaultIPs = [
+          `http://192.168.1.6:${port}`,
+          `http://192.168.1.10:${port}`,
+          `http://192.168.0.10:${port}`,
+          `http://localhost:${port}`
+        ];
+        
+        setNetworkInterfaces(defaultIPs);
+        setSelectedIP(defaultIPs[0]);
+        setIsLoading(false);
       }
     };
 
-    // Function to get actual network interfaces using multiple approaches
-    const getActualNetworkInterfaces = async () => {
-      try {
-        // Method 1: Try WebRTC approach
-        const ipAddresses = await getDeviceIPAddresses();
-        if (ipAddresses.length > 0) {
-          const port = window.location.port || "5173";
-          const interfacesWithPort = ipAddresses.map(
-            (ip: string) => `http://${ip}:${port}`
-          );
-          setNetworkInterfaces(interfacesWithPort);
-          setLoadingNetworkInterfaces(false);
-          return;
-        }
-        
-        // Method 2: Try to get IP from window.location if we're not on localhost
-        const host = window.location.hostname;
-        if (host && !host.includes('localhost') && host !== '127.0.0.1' && host !== '[::1]') {
-          const port = window.location.port || "5173";
-          setNetworkInterfaces([`http://${host}:${port}`]);
-          setLoadingNetworkInterfaces(false);
-          return;
-        }
-        
-        // Final fallback to default interfaces with better instructions
-        setNetworkInterfaces([
-          "http://[YOUR_COMPUTER_IP]:5173",
-          "http://192.168.1.10:5173",
-          "http://192.168.0.10:5173",
-        ]);
-      } catch (error) {
-        console.error("Error in getActualNetworkInterfaces:", error);
-        // Final fallback to default interfaces
-        setNetworkInterfaces([
-          "http://[YOUR_COMPUTER_IP]:5173",
-          "http://192.168.1.10:5173",
-          "http://192.168.0.10:5173",
-        ]);
-      } finally {
-        setLoadingNetworkInterfaces(false);
-      }
-    };
-
-    // Helper function to get device IP addresses using WebRTC
-    const getDeviceIPAddresses = (): Promise<string[]> => {
-      return new Promise((resolve) => {
-        try {
-          // Create a WebRTC connection to discover local IP addresses
-          const pc = new RTCPeerConnection({
-            iceServers: [
-              { urls: "stun:stun.l.google.com:19302" },
-              { urls: "stun:stun1.l.google.com:19302" }
-            ]
-          });
-          
-          // Add a dummy data channel
-          pc.createDataChannel('');
-          
-          // Listen for ICE candidates which contain IP addresses
-          const ipAddresses: string[] = [];
-          let finished = false;
-          
-          const finish = () => {
-            if (!finished) {
-              finished = true;
-              pc.close();
-              // Remove duplicates and localhost addresses
-              const uniqueIPs = [...new Set(ipAddresses)].filter(ip => 
-                !ip.startsWith('127.') && 
-                !ip.startsWith('0.') && 
-                !ip.match(/^169\.254\./) &&
-                ip !== '127.0.0.1'
-              );
-              resolve(uniqueIPs);
-            }
-          };
-          
-          pc.onicecandidate = (event) => {
-            if (event.candidate) {
-              const candidate = event.candidate.candidate;
-              // Extract IP address from candidate string
-              const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3})/;
-              const match = candidate.match(ipRegex);
-              if (match && match[1]) {
-                const ip = match[1];
-                if (!ipAddresses.includes(ip)) {
-                  ipAddresses.push(ip);
-                }
-              }
-            } else if (event.candidate === null) {
-              // No more candidates, finish
-              finish();
-            }
-          };
-          
-          // Create an offer to trigger ICE candidate generation
-          pc.createOffer()
-            .then(offer => pc.setLocalDescription(offer))
-            .catch(err => {
-              console.error("WebRTC error:", err);
-              finish();
-            });
-          
-          // Timeout to resolve the promise in case WebRTC doesn't work
-          setTimeout(() => {
-            finish();
-          }, 3000);
-        } catch (error) {
-          console.error("Error in getDeviceIPAddresses:", error);
-          resolve([]);
-        }
-      });
-    };
-
+    // Run the detection when component mounts
     void getNetworkInterfaces();
+    
+    // Refresh IP detection every 30 seconds to catch network changes
+    const interval = setInterval(() => {
+      void getNetworkInterfaces();
+    }, 30000);
+    
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
 
   const handleAddStaff = async (e: React.FormEvent) => {
@@ -273,7 +171,7 @@ export function StaffManagement() {
           Staff members can access the system using the following link:
         </p>
 
-        {loadingNetworkInterfaces ? (
+        {isLoading ? (
           <div className="flex items-center justify-center py-4">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
             <span className="ml-2 text-blue-700">
