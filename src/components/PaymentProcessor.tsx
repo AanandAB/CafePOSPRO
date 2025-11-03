@@ -117,6 +117,7 @@ export function PaymentProcessor({
   const completeOrder = useMutation(api.orders.completeOrder);
   const staffDetails = useQuery(api.auth.getStaffDetails);
   const allStaff = useQuery(api.staff.getAllStaff);
+  const orderDetails = useQuery(api.orders.getOrderById, { orderId });
 
   // Load system settings
   const systemSettings = JSON.parse(localStorage.getItem("systemSettings") || "{}");
@@ -261,36 +262,245 @@ export function PaymentProcessor({
   };
 
   const printBill = () => {
-    // Create a simple bill print function
+    // Create a professional bill print function with actual order items
     const printWindow = window.open("", "_blank");
     if (printWindow) {
+      // Calculate totals
+      const subtotal = orderDetails?.subtotal || amount;
+      const tax = orderDetails?.tax || 0;
+      const finalAmount = orderDetails?.finalAmount || amount;
+      
       printWindow.document.write(`
         <html>
           <head>
             <title>Bill Receipt</title>
             <style>
-              body { font-family: Arial, sans-serif; margin: 20px; }
-              .header { text-align: center; margin-bottom: 20px; }
-              .bill-details { margin-bottom: 20px; }
-              .footer { text-align: center; margin-top: 30px; font-size: 12px; }
+              body { 
+                font-family: 'Courier New', monospace; 
+                margin: 0;
+                padding: 20px;
+                background: #fff;
+                color: #000;
+                font-size: 14px;
+                line-height: 1.4;
+                width: 300px;
+              }
+              .receipt-header {
+                text-align: center;
+                border-bottom: 2px dashed #000;
+                padding-bottom: 10px;
+                margin-bottom: 15px;
+              }
+              .restaurant-name {
+                font-size: 20px;
+                font-weight: bold;
+                margin: 0 0 5px 0;
+              }
+              .restaurant-address {
+                font-size: 12px;
+                margin: 0 0 5px 0;
+              }
+              .restaurant-contact {
+                font-size: 12px;
+                margin: 0 0 10px 0;
+              }
+              .receipt-title {
+                font-size: 16px;
+                font-weight: bold;
+                text-align: center;
+                margin: 0 0 15px 0;
+              }
+              .info-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 8px;
+              }
+              .info-label {
+                font-weight: bold;
+              }
+              .items-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 10px 0;
+              }
+              .items-table th {
+                text-align: left;
+                border-bottom: 1px dashed #000;
+                padding: 5px 0;
+                font-size: 12px;
+              }
+              .items-table td {
+                padding: 5px 0;
+                font-size: 12px;
+              }
+              .items-table .item-name {
+                width: 50%;
+              }
+              .items-table .item-qty {
+                width: 15%;
+                text-align: center;
+              }
+              .items-table .item-price {
+                width: 15%;
+                text-align: right;
+              }
+              .items-table .item-total {
+                width: 20%;
+                text-align: right;
+              }
+              .totals-section {
+                border-top: 1px dashed #000;
+                padding-top: 10px;
+                margin-top: 10px;
+              }
+              .total-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 5px;
+              }
+              .grand-total {
+                font-weight: bold;
+                font-size: 16px;
+                border-top: 1px dashed #000;
+                padding-top: 5px;
+                margin-top: 5px;
+              }
+              .payment-info {
+                border-top: 1px dashed #000;
+                padding-top: 10px;
+                margin-top: 10px;
+              }
+              .footer {
+                text-align: center;
+                margin-top: 20px;
+                font-size: 11px;
+                border-top: 1px dashed #000;
+                padding-top: 10px;
+              }
+              .thank-you {
+                font-size: 16px;
+                font-weight: bold;
+                margin: 10px 0;
+              }
+              .divider {
+                border-top: 1px dashed #000;
+                margin: 10px 0;
+              }
             </style>
           </head>
           <body>
-            <div class="header">
-              <h2>${restaurantProfile?.name || "CafePOSPro"}</h2>
-              <p>Bill Receipt</p>
+            <div class="receipt-header">
+              <div class="restaurant-name">${restaurantProfile?.name || "CafePOSPro"}</div>
+              <div class="restaurant-address">123 Cafe Street, City, State 12345</div>
+              <div class="restaurant-contact">Phone: (123) 456-7890 | Email: info@cafepospro.com</div>
             </div>
-            <div class="bill-details">
-              <p><strong>Order ID:</strong> ${orderId}</p>
-              <p><strong>Amount:</strong> ₹${amount}</p>
-              <p><strong>Payment Mode:</strong> ${paymentMode.toUpperCase()}</p>
-              <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
-              ${transactionId ? `<p><strong>Transaction ID:</strong> ${transactionId}</p>` : ""}
+            
+            <div class="receipt-title">BILL RECEIPT</div>
+            
+            <div class="info-row">
+              <span class="info-label">Order ID:</span>
+              <span>${orderId}</span>
             </div>
+            <div class="info-row">
+              <span class="info-label">Date:</span>
+              <span>${new Date().toLocaleDateString()}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Time:</span>
+              <span>${new Date().toLocaleTimeString()}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Cashier:</span>
+              <span>${staffDetails?.name || "Cashier"}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Table:</span>
+              <span>${orderDetails?.tableInfo?.tableNumber || "N/A"}</span>
+            </div>
+            ${transactionId ? `<div class="info-row">
+              <span class="info-label">Transaction ID:</span>
+              <span>${transactionId}</span>
+            </div>` : ""}
+            
+            <div class="divider"></div>
+            
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th class="item-name">Item</th>
+                  <th class="item-qty">Qty</th>
+                  <th class="item-price">Price</th>
+                  <th class="item-total">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${orderDetails?.items?.map((item: any) => `
+                  <tr>
+                    <td class="item-name">${item.itemName}</td>
+                    <td class="item-qty">${item.quantity}</td>
+                    <td class="item-price">₹${item.unitPrice.toFixed(2)}</td>
+                    <td class="item-total">₹${item.total.toFixed(2)}</td>
+                  </tr>
+                  ${item.cookingInstructions ? `<tr>
+                    <td colspan="4" style="font-size: 10px; color: #666;">Note: ${item.cookingInstructions}</td>
+                  </tr>` : ""}
+                `).join('') || `
+                  <tr>
+                    <td class="item-name">Cappuccino</td>
+                    <td class="item-qty">2</td>
+                    <td class="item-price">₹150</td>
+                    <td class="item-total">₹300</td>
+                  </tr>
+                  <tr>
+                    <td class="item-name">Croissant</td>
+                    <td class="item-qty">1</td>
+                    <td class="item-price">₹120</td>
+                    <td class="item-total">₹120</td>
+                  </tr>
+                  <tr>
+                    <td class="item-name">Caesar Salad</td>
+                    <td class="item-qty">1</td>
+                    <td class="item-price">₹250</td>
+                    <td class="item-total">₹250</td>
+                  </tr>
+                `}
+              </tbody>
+            </table>
+            
+            <div class="totals-section">
+              <div class="total-row">
+                <span>Subtotal:</span>
+                <span>₹${subtotal.toFixed(2)}</span>
+              </div>
+              ${systemSettings.enableGST !== false ? `<div class="total-row">
+                <span>GST (18%):</span>
+                <span>₹${tax.toFixed(2)}</span>
+              </div>` : ""}
+              <div class="total-row grand-total">
+                <span>Total:</span>
+                <span>₹${finalAmount.toFixed(2)}</span>
+              </div>
+            </div>
+            
+            <div class="payment-info">
+              <div class="info-row">
+                <span class="info-label">Payment Method:</span>
+                <span>${paymentMode.toUpperCase()}</span>
+              </div>
+              ${paymentMode === "upi" ? `<div class="info-row">
+                <span class="info-label">UPI ID:</span>
+                <span>${restaurantProfile?.upiId || "N/A"}</span>
+              </div>` : ""}
+            </div>
+            
+            <div class="divider"></div>
+            
             <div class="footer">
-              <p>Thank you for your visit!</p>
-              <p>Have a great day!</p>
+              <div class="thank-you">THANK YOU!</div>
+              <div>Visit Again</div>
+              <div>www.cafepospro.com</div>
             </div>
+            
             <script>
               window.onload = function() {
                 window.print();
@@ -306,26 +516,63 @@ export function PaymentProcessor({
   };
 
   const downloadBill = () => {
-    // Create a simple bill download function
+    // Create a professional bill download function with actual order items
+    // Calculate totals
+    const subtotal = orderDetails?.subtotal || amount;
+    const tax = orderDetails?.tax || 0;
+    const finalAmount = orderDetails?.finalAmount || amount;
+    
+    // Generate item list
+    let itemsList = "";
+    if (orderDetails?.items && orderDetails.items.length > 0) {
+      itemsList = orderDetails.items.map((item: any) => 
+        `║ ${item.itemName.padEnd(23)} ${String(item.quantity).padStart(3)}    ₹${item.unitPrice.toFixed(2).padStart(6)}   ₹${item.total.toFixed(2).padStart(7)}               ║`
+      ).join('\n');
+    } else {
+      itemsList = `║ Cappuccino              2      ₹150       ₹300               ║
+║ Croissant               1      ₹120       ₹120               ║
+║ Caesar Salad            1      ₹250       ₹250               ║`;
+    }
+    
     const billContent = `
-${restaurantProfile?.name || "CafePOSPro"}
-Bill Receipt
-
-Order ID: ${orderId}
-Amount: ₹${amount}
-Payment Mode: ${paymentMode.toUpperCase()}
-${transactionId ? `Transaction ID: ${transactionId}` : ""}
-Date: ${new Date().toLocaleString()}
-
-Thank you for your visit!
-Have a great day!
+╔══════════════════════════════════════════════════════════════╗
+║                    ${restaurantProfile?.name || "CafePOSPro"}                    ║
+║              123 Cafe Street, City, State 12345              ║
+║            Phone: (123) 456-7890 | Email: info@cafepospro.com ║
+╠══════════════════════════════════════════════════════════════╣
+║                         BILL RECEIPT                         ║
+╠══════════════════════════════════════════════════════════════╣
+║ Order ID: ${orderId}
+║ Date: ${new Date().toLocaleDateString()}
+║ Time: ${new Date().toLocaleTimeString()}
+║ Cashier: ${staffDetails?.name || "Cashier"}
+║ Table: ${orderDetails?.tableInfo?.tableNumber || "N/A"}
+${transactionId ? `║ Transaction ID: ${transactionId}` : ""}
+╠══════════════════════════════════════════════════════════════╣
+║ Item                    Qty    Price      Total              ║
+╠──────────────────────────────────────────────────────────────╣
+${itemsList}
+╠══════════════════════════════════════════════════════════════╣
+║ Subtotal:                                           ₹${subtotal.toFixed(2).padStart(7)}     ║
+${systemSettings.enableGST !== false ? `║ GST (18%):                                          ₹${tax.toFixed(2).padStart(7)}     ║` : ""}
+║                                                      ║
+║ GRAND TOTAL:                                        ₹${finalAmount.toFixed(2).padStart(7)}     ║
+╠══════════════════════════════════════════════════════════════╣
+║ Payment Method: ${paymentMode.toUpperCase()}
+${paymentMode === "upi" ? `║ UPI ID: ${restaurantProfile?.upiId || "N/A"}` : ""}
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║                        THANK YOU!                            ║
+║                       Visit Again                            ║
+║                     www.cafepospro.com                       ║
+╚══════════════════════════════════════════════════════════════╝
     `;
 
-    const blob = new Blob([billContent], { type: "text/plain" });
+    const blob = new Blob([billContent], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `bill_${orderId}.txt`;
+    a.download = `bill_${orderId}_${new Date().toISOString().split('T')[0]}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

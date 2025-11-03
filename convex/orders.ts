@@ -31,6 +31,28 @@ export const getAllActiveOrders = query({
   },
 });
 
+export const getOrderById = query({
+  args: { orderId: v.id("orders") },
+  handler: async (ctx, args) => {
+    const order = await ctx.db.get(args.orderId);
+    if (!order) {
+      throw new Error("Order not found");
+    }
+    
+    // Get table information if table order
+    let tableInfo = null;
+    if (order.tableId) {
+      const table = await ctx.db.get(order.tableId);
+      tableInfo = table ? { tableNumber: table.tableNumber } : null;
+    }
+    
+    return {
+      ...order,
+      tableInfo,
+    };
+  },
+});
+
 export const getOrdersByWaiter = query({
   args: { waiterId: v.id("staff") },
   handler: async (ctx, args) => {

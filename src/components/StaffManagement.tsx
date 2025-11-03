@@ -33,10 +33,10 @@ export function StaffManagement() {
       try {
         // Hardcode the correct IP for this environment
         const port = window.location.port || "5173";
-        const correctIP = `http://192.168.1.6:${port}`;
+        const correctIP = `http://192.168.1.10:${port}`;
         const defaultIPs = [
           correctIP,
-          `http://192.168.1.10:${port}`,
+          `http://192.168.1.6:${port}`,
           `http://192.168.0.10:${port}`,
           `http://localhost:${port}`
         ];
@@ -49,8 +49,8 @@ export function StaffManagement() {
         // Fallback to hardcoded IPs
         const port = window.location.port || "5173";
         const defaultIPs = [
-          `http://192.168.1.6:${port}`,
           `http://192.168.1.10:${port}`,
+          `http://192.168.1.6:${port}`,
           `http://192.168.0.10:${port}`,
           `http://localhost:${port}`
         ];

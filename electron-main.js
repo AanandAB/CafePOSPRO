@@ -167,31 +167,43 @@ ipcMain.handle("get-network-interfaces", async () => {
   try {
     const networkInterfaces = os.networkInterfaces();
     const ipAddresses = [];
-    let foundCorrectIP = false;
+    let wifiIP = null;
 
-    // Always add the correct IP first
-    ipAddresses.push("192.168.1.6");
-
-    // Extract IP addresses from all network interfaces
+    // Extract IP addresses from all network interfaces, prioritizing wireless interfaces
     for (const interfaceName in networkInterfaces) {
       const interfaces = networkInterfaces[interfaceName];
+      // Check if this is a wireless interface (prioritize Wi-Fi, wlan, wireless)
+      const isWireless = interfaceName.toLowerCase().includes('wi-fi') || 
+                        interfaceName.toLowerCase().includes('wlan') || 
+                        interfaceName.toLowerCase().includes('wireless');
+      
       for (const iface of interfaces) {
         // Skip internal (loopback) and IPv6 addresses
         if (!iface.internal && iface.family === "IPv4") {
-          // Add the IP if it's not already in the array and not the correct IP
-          if (iface.address !== "192.168.1.6" && !ipAddresses.includes(iface.address)) {
+          // If this is a wireless interface, prioritize it
+          if (isWireless) {
+            wifiIP = iface.address;
+            ipAddresses.unshift(iface.address); // Add to beginning of array
+          } else {
             ipAddresses.push(iface.address);
-          } else if (iface.address === "192.168.1.6") {
-            foundCorrectIP = true;
           }
         }
       }
     }
 
-    // If we didn't find the correct IP in the network interfaces, it's already added at the beginning
+    // If we found a WiFi IP, make sure it's first in the array
+    if (wifiIP && !ipAddresses.includes(wifiIP)) {
+      ipAddresses.unshift(wifiIP);
+    }
+
+    // Always ensure we have the correct local IP as a fallback
+    if (!ipAddresses.includes("192.168.1.6")) {
+      ipAddresses.unshift("192.168.1.6");
+    }
+
     return { success: true, interfaces: ipAddresses };
   } catch (error) {
-    // Fallback to hardcoded correct IP
-    return { success: true, interfaces: ["192.168.1.6"] };
+    // Fallback to hardcoded IPs if detection fails
+    return { success: true, interfaces: ["192.168.1.6", "192.168.1.10", "192.168.0.10"] };
   }
 });
