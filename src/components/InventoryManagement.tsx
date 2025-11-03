@@ -27,6 +27,7 @@ export function InventoryManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
+  const [showHiddenItems, setShowHiddenItems] = useState(false);
 
   const [formData, setFormData] = useState({
     itemName: "",
@@ -39,13 +40,13 @@ export function InventoryManagement() {
     image: "",
   });
 
-  const inventory = useQuery(api.inventory.getAllInventory);
+  const inventory = useQuery(showHiddenItems ? api.inventory.getAllInventoryIncludingHidden : api.inventory.getAllInventory);
   const categories = useQuery(api.inventory.getAllCategories);
   const addItem = useMutation(api.inventory.addInventoryItem);
   const updateItem = useMutation(api.inventory.updateInventoryItem);
   const toggleItemStatus = useMutation(api.inventory.toggleInventoryItemStatus);
 
-  // Filter inventory based on search, category, and low stock filter
+  // Filter inventory based on search, category, low stock filter, and hidden items filter
   const filteredInventory = inventory?.filter((item) => {
     const matchesSearch = item.itemName
       .toLowerCase()
@@ -54,7 +55,8 @@ export function InventoryManagement() {
       selectedCategory === "all" || item.category === selectedCategory;
     const matchesLowStock =
       !showLowStockOnly || item.quantity <= item.lowStockThreshold;
-    return matchesSearch && matchesCategory && matchesLowStock;
+    const matchesHidden = showHiddenItems ? !item.isActive : item.isActive; // Show hidden or active items based on filter
+    return matchesSearch && matchesCategory && matchesLowStock && matchesHidden;
   });
 
   // Check for low stock items and show notifications
@@ -199,7 +201,7 @@ export function InventoryManagement() {
 
       {/* Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-amber-100 dark:border-gray-700">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <input
               type="text"
@@ -242,6 +244,18 @@ export function InventoryManagement() {
               }`}
             >
               Low Stock Only
+            </button>
+          </div>
+          <div>
+            <button
+              onClick={() => setShowHiddenItems(!showHiddenItems)}
+              className={`w-full px-3 py-2 rounded-lg font-medium transition-colors ${
+                showHiddenItems
+                  ? "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-800"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600"
+              }`}
+            >
+              {showHiddenItems ? "Show Active" : "Show Hidden"}
             </button>
           </div>
         </div>
@@ -351,9 +365,21 @@ export function InventoryManagement() {
                 </div>
 
                 {item.quantity <= item.lowStockThreshold && (
-                  <div className="mt-3">
+                  <div className="flex flex-wrap gap-2 mt-3">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200">
                       Low Stock
+                    </span>
+                    {!item.isActive && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                        Hidden
+                      </span>
+                    )}
+                  </div>
+                )}
+                {item.quantity > item.lowStockThreshold && !item.isActive && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                      Hidden
                     </span>
                   </div>
                 )}
@@ -369,7 +395,7 @@ export function InventoryManagement() {
                         : "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-200 dark:hover:bg-green-900/50"
                     }`}
                   >
-                    {item.isActive ? "Hide" : "Show"}
+                    {item.isActive ? "Hide" : "Unhide"}
                   </button>
                 </div>
               </div>
@@ -432,15 +458,43 @@ export function InventoryManagement() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Category *
                 </label>
-                <input
-                  type="text"
-                  value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  required
-                />
+                <div className="flex gap-2">
+                  <select
+                    value={formData.category}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">Select existing category</option>
+                    {categories?.map((categoryObj: any) => {
+                      // Handle both string and object formats for categories
+                      const category =
+                        typeof categoryObj === "string"
+                          ? categoryObj
+                          : categoryObj.name || categoryObj.category || "";
+                      // Skip empty categories
+                      if (!category) return null;
+                      return (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <input
+                    type="text"
+                    value={formData.category}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
+                    placeholder="Or type new category"
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Select from existing categories or type a new one
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

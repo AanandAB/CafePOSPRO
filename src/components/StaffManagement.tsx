@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { Id } from "../../convex/_generated/dataModel";
+import * as QRCode from "qrcode.react";
 
 export function StaffManagement() {
   const [isAddingStaff, setIsAddingStaff] = useState(false);
@@ -179,32 +180,57 @@ export function StaffManagement() {
             </span>
           </div>
         ) : (
-          <div className="space-y-3">
-            {networkInterfaces.map((url, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  readOnly
-                  value={url}
-                  className="flex-1 px-3 py-2 bg-white border border-blue-300 rounded-lg text-sm font-mono"
-                />
-                <button
-                  onClick={() => {
-                    void navigator.clipboard
-                      .writeText(url)
-                      .then(() => {
-                        toast.success("Link copied to clipboard");
-                      })
-                      .catch(() => {
-                        toast.error("Failed to copy link");
-                      });
-                  }}
-                  className="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-                >
-                  Copy
-                </button>
+          <div className="space-y-6">
+            <div className="space-y-3">
+              {networkInterfaces.map((url, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={url}
+                    className="flex-1 px-3 py-2 bg-white border border-blue-300 rounded-lg text-sm font-mono"
+                  />
+                  <button
+                    onClick={() => {
+                      void navigator.clipboard
+                        .writeText(url)
+                        .then(() => {
+                          toast.success("Link copied to clipboard");
+                        })
+                        .catch(() => {
+                          toast.error("Failed to copy link");
+                        });
+                    }}
+                    className="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* QR Code Section */}
+            <div className="bg-white rounded-lg p-4 border border-blue-200">
+              <h4 className="text-md font-semibold text-blue-900 mb-3">
+                Scan QR Code for Staff Access
+              </h4>
+              <div className="flex flex-col items-center">
+                {selectedIP && (
+                  <>
+                    <QRCode.QRCodeSVG 
+                      value={selectedIP} 
+                      size={200} 
+                      level={"H"} 
+                      includeMargin={true} 
+                      className="mb-3 bg-white p-4 rounded-lg"
+                    />
+                    <p className="text-sm text-blue-700 text-center">
+                      Staff can scan this QR code to access the login page
+                    </p>
+                  </>
+                )}
               </div>
-            ))}
+            </div>
           </div>
         )}
 

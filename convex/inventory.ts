@@ -71,6 +71,20 @@ export const addInventoryItem = mutation({
       throw new Error(`Item "${args.itemName}" already exists in inventory`);
     }
 
+    // Check if category exists, if not create it
+    const existingCategory = await ctx.db
+      .query("categories")
+      .filter((q) => q.eq(q.field("name"), args.category))
+      .first();
+
+    if (!existingCategory) {
+      // Create new category with default color
+      await ctx.db.insert("categories", {
+        name: args.category,
+        color: "#3B82F6", // Default blue color
+      });
+    }
+
     return await ctx.db.insert("inventory", {
       ...args,
       isActive: true,
@@ -97,6 +111,23 @@ export const updateInventoryItem = mutation({
     // In a production app, you might want more specific permission checking
 
     const { itemId, ...updates } = args;
+    
+    // If category is being updated, check if it exists and create if not
+    if (updates.category) {
+      const existingCategory = await ctx.db
+        .query("categories")
+        .filter((q) => q.eq(q.field("name"), updates.category))
+        .first();
+
+      if (!existingCategory) {
+        // Create new category with default color
+        await ctx.db.insert("categories", {
+          name: updates.category,
+          color: "#3B82F6", // Default blue color
+        });
+      }
+    }
+
     await ctx.db.patch(itemId, updates);
   },
 });
