@@ -144,6 +144,7 @@ export const createOrder = mutation({
     ),
     waiterId: v.optional(v.id("staff")),
     notes: v.optional(v.string()),
+    enableGST: v.optional(v.boolean()), // Add GST setting parameter
   },
   handler: async (ctx, args) => {
     // For staff members using custom auth, we'll allow order creation
@@ -166,7 +167,10 @@ export const createOrder = mutation({
 
     const orderNumber = `ORD-${Date.now()}`;
     const subtotal = args.items.reduce((sum, item) => sum + item.total, 0);
-    const tax = subtotal * 0.18; // 18% GST
+    
+    // Apply GST only if enabled (default to true if not specified)
+    const enableGST = args.enableGST !== false;
+    const tax = enableGST ? subtotal * 0.18 : 0; // 18% GST
     const finalAmount = subtotal + tax;
 
     // Only include waiterId in the order if it's a valid staff ID

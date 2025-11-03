@@ -12,6 +12,15 @@ export const getAllInventory = query({
   },
 });
 
+export const getAllInventoryIncludingHidden = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("inventory")
+      .collect();
+  },
+});
+
 export const getInventoryByCategory = query({
   args: { category: v.string() },
   handler: async (ctx, args) => {

@@ -125,8 +125,12 @@ export function POSSystem() {
     return item ? item.quantity : 0;
   };
 
+  // Load system settings
+  const systemSettings = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+  
   const subtotal = selectedItems.reduce((sum, item) => sum + item.total, 0);
-  const tax = subtotal * 0.18;
+  const enableGST = systemSettings.enableGST !== false; // Default to true if not set
+  const tax = enableGST ? subtotal * 0.18 : 0;
   const finalAmount = subtotal + tax - discount;
 
   const handleCreateOrder = async () => {
@@ -171,11 +175,16 @@ export function POSSystem() {
       }
       // For managers, we don't pass a waiterId since they're not staff members
 
+      // Load system settings to pass GST setting
+      const systemSettings = JSON.parse(localStorage.getItem("systemSettings") || "{}");
+      const enableGST = systemSettings.enableGST !== false; // Default to true if not set
+
       await createOrder({
         tableId: selectedTable ? (selectedTable as any) : undefined,
         items: orderItems,
         waiterId: waiterId, // This will be undefined for managers
         notes: customerName ? `Customer: ${customerName}` : undefined,
+        enableGST, // Pass GST setting to backend
       });
 
       // Reset form

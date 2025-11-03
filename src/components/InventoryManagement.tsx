@@ -530,31 +530,35 @@ export function InventoryManagement() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Image
                 </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={formData.image}
-                    onChange={(e) =>
-                      setFormData({ ...formData, image: e.target.value })
-                    }
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    placeholder="https://example.com/image.jpg"
-                  />
+                <input
+                  type="text"
+                  value={formData.image}
+                  onChange={(e) =>
+                    setFormData({ ...formData, image: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="https://example.com/image.jpg"
+                />
+                <div className="flex gap-2 mt-2">
                   <label className="px-3 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors cursor-pointer">
-                    Upload
+                    Upload Image
                     <input
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={async (e) => {
+                      onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          // For now, we'll just show a placeholder URL
-                          // In a real implementation, you would upload to a service like Cloudinary
+                          // Create a preview URL for the image
+                          const previewUrl = URL.createObjectURL(file);
                           setFormData({ 
                             ...formData, 
-                            image: URL.createObjectURL(file) 
+                            image: previewUrl
                           });
+                          
+                          // In a real implementation, you would upload to a service like Cloudinary
+                          // For now, we'll just use the preview URL
+                          toast.info("Image selected. In a production environment, this would be uploaded to a cloud storage service.");
                         }
                       }}
                     />
@@ -566,6 +570,11 @@ export function InventoryManagement() {
                       src={formData.image} 
                       alt="Preview" 
                       className="w-16 h-16 object-cover rounded-lg border border-gray-300"
+                      onError={(e) => {
+                        // If the image fails to load, show a placeholder
+                        const target = e.target as HTMLImageElement;
+                        target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'%3E%3C/circle%3E%3Cpath d='M21 15l-5-5L5 21'%3E%3C/path%3E%3C/svg%3E";
+                      }}
                     />
                   </div>
                 )}
