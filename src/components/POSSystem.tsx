@@ -266,7 +266,7 @@ export function POSSystem() {
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setSelectedCategory("all")}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
                 selectedCategory === "all"
                   ? "bg-amber-600 text-white"
                   : "bg-white text-gray-700 border border-gray-300 hover:bg-amber-50"
@@ -278,7 +278,7 @@ export function POSSystem() {
               <button
                 key={category._id}
                 onClick={() => setSelectedCategory(category.name)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
                   selectedCategory === category.name
                     ? "bg-amber-600 text-white"
                     : "bg-white text-gray-700 border border-gray-300 hover:bg-amber-50"
@@ -289,45 +289,50 @@ export function POSSystem() {
             ))}
           </div>
 
-          {/* Menu Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {/* Menu Grid - Optimized for faster loading and better UX */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {filteredInventory.map((item) => (
               <div
                 key={item._id}
                 onClick={() => addToCart(item)}
-                className={`bg-white rounded-xl p-4 shadow-sm border cursor-pointer hover:shadow-md transition-all duration-200 ${
+                className={`bg-white rounded-lg p-3 shadow-sm border cursor-pointer hover:shadow-md transition-all duration-150 ${
                   isItemInCart(item._id)
-                    ? "border-2 border-amber-500 ring-2 ring-amber-200 bg-amber-50"
-                    : "border-amber-100"
+                    ? "border-2 border-amber-500 ring-1 ring-amber-200 bg-amber-50"
+                    : "border-gray-200 hover:border-amber-300"
                 }`}
               >
                 <div className="text-center">
-                  {/* Item Image */}
+                  {/* Item Image - Optimized size */}
                   {item.image ? (
                     <img
                       src={item.image}
                       alt={item.itemName}
-                      className="w-16 h-16 object-cover rounded-full mx-auto mb-3"
+                      className="w-12 h-12 object-cover rounded-full mx-auto mb-2"
+                      loading="lazy"
                     />
                   ) : (
-                    <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-2xl">🍽️</span>
+                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <span className="text-lg">🍽️</span>
                     </div>
                   )}
-                  <h3 className="font-semibold text-gray-900 mb-1">
+                  <h3 className="font-semibold text-gray-900 text-sm mb-1 truncate">
                     {item.itemName}
                   </h3>
-                  <p className="text-amber-600 font-bold">₹{item.unitPrice}</p>
+                  <p className="text-amber-600 font-bold text-sm">₹{item.unitPrice}</p>
                   <p
-                    className={`text-xs mt-1 ${item.quantity <= item.lowStockThreshold ? "text-red-600 font-bold" : "text-gray-500"}`}
+                    className={`text-xs mt-1 ${
+                      item.quantity <= item.lowStockThreshold
+                        ? "text-red-600 font-bold"
+                        : "text-gray-500"
+                    }`}
                   >
                     Stock: {item.quantity}{" "}
                     {item.quantity <= item.lowStockThreshold && "(Low)"}
                   </p>
                   {/* Show quantity if item is in cart */}
                   {isItemInCart(item._id) && (
-                    <div className="mt-2 bg-amber-100 text-amber-800 text-xs font-bold py-1 px-2 rounded-full inline-block">
-                      In Cart: {getItemQuantity(item._id)}
+                    <div className="mt-1 bg-amber-100 text-amber-800 text-xs font-bold py-0.5 px-1.5 rounded-full inline-block">
+                      {getItemQuantity(item._id)} in cart
                     </div>
                   )}
                 </div>
@@ -340,8 +345,8 @@ export function POSSystem() {
         <div
           className={`lg:col-span-1 ${isBillingVisible ? "block" : "hidden"} lg:block`}
         >
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100 h-fit lg:sticky lg:top-6">
-            <div className="flex justify-between items-center mb-4">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-100 h-fit lg:sticky lg:top-6">
+            <div className="flex justify-between items-center mb-3">
               <h3 className="text-lg font-semibold text-gray-900">
                 Order Summary
               </h3>
@@ -353,74 +358,74 @@ export function POSSystem() {
               </button>
             </div>
 
-            {/* Customer Info */}
-            <div className="space-y-3 mb-4">
+            {/* Customer Info - Compact form */}
+            <div className="space-y-2 mb-3">
               <input
                 type="text"
                 placeholder="Customer Name (Optional)"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
               />
 
               <select
                 value={selectedTable}
                 onChange={(e) => setSelectedTable(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
               >
                 <option value="">Select Table (Optional)</option>
                 {tables?.map((table) => (
                   <option key={table._id} value={table._id}>
-                    Table {table.tableNumber} (Capacity: {table.capacity})
+                    Table {table.tableNumber}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Order Items */}
-            <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
+            {/* Order Items - Optimized scrolling and compact display */}
+            <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
               {selectedItems.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">
+                <p className="text-gray-500 text-center py-3 text-sm">
                   No items selected
                 </p>
               ) : (
                 selectedItems.map((item) => (
                   <div
                     key={item._id}
-                    className="flex items-center justify-between bg-gray-50 rounded-lg p-3"
+                    className="flex items-center justify-between bg-gray-50 rounded-lg p-2"
                   >
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-900 text-sm truncate">
                         {item.itemName}
                       </h4>
-                      <p className="text-sm text-gray-600">
-                        ₹{item.unitPrice} each
+                      <p className="text-xs text-gray-600">
+                        ₹{item.unitPrice} × {item.quantity}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 mx-1">
                       <button
                         onClick={() =>
                           updateQuantity(item._id, item.quantity - 1)
                         }
-                        className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-sm font-bold"
+                        className="w-5 h-5 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-xs font-bold"
                       >
                         -
                       </button>
-                      <span className="w-8 text-center font-medium">
+                      <span className="w-6 text-center text-xs font-medium">
                         {item.quantity}
                       </span>
                       <button
                         onClick={() =>
                           updateQuantity(item._id, item.quantity + 1)
                         }
-                        className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold"
+                        className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold"
                       >
                         +
                       </button>
                     </div>
-                    <div className="ml-3 text-right">
-                      <p className="font-semibold text-gray-900">
-                        ₹{item.total}
+                    <div className="ml-1 text-right">
+                      <p className="font-semibold text-gray-900 text-sm">
+                        ₹{item.total.toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -428,9 +433,9 @@ export function POSSystem() {
               )}
             </div>
 
-            {/* Totals */}
+            {/* Totals - Compact and clear */}
             {selectedItems.length > 0 && (
-              <div className="space-y-2 border-t pt-4">
+              <div className="space-y-1.5 border-t pt-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal:</span>
                   <span className="font-medium">₹{subtotal.toFixed(2)}</span>
@@ -445,26 +450,26 @@ export function POSSystem() {
                     type="number"
                     value={discount}
                     onChange={(e) => setDiscount(Number(e.target.value))}
-                    className="w-20 px-2 py-1 border border-gray-300 rounded text-right"
+                    className="w-16 px-1.5 py-0.5 text-sm border border-gray-300 rounded text-right"
                     min="0"
                     max={subtotal}
                   />
                 </div>
-                <div className="flex justify-between text-lg font-bold border-t pt-2">
+                <div className="flex justify-between font-bold border-t pt-1.5 text-base">
                   <span>Total:</span>
                   <span>₹{finalAmount.toFixed(2)}</span>
                 </div>
               </div>
             )}
 
-            {/* Action Buttons */}
-            <div className="space-y-2 mt-4">
+            {/* Action Buttons - Clear and prominent */}
+            <div className="space-y-2 mt-3">
               <button
                 onClick={() => {
                   void handleCreateOrder();
                 }}
                 disabled={selectedItems.length === 0}
-                className="w-full bg-amber-600 text-white py-3 rounded-lg font-semibold hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full bg-amber-600 text-white py-2.5 rounded-lg font-semibold hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
               >
                 Create Order
               </button>
@@ -473,7 +478,7 @@ export function POSSystem() {
                   setSelectedItems([]);
                   setDiscount(0);
                 }}
-                className="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                className="w-full bg-gray-200 text-gray-700 py-1.5 rounded-lg font-medium hover:bg-gray-300 transition-colors text-sm"
               >
                 Clear All
               </button>
@@ -482,11 +487,11 @@ export function POSSystem() {
         </div>
       </div>
 
-      {/* Mobile Billing Overlay */}
-      {!isBillingVisible && (
+      {/* Mobile Billing Overlay - Simplified */}
+      {selectedItems.length > 0 && !isBillingVisible && (
         <div className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-10 flex items-end">
-          <div className="bg-white w-full rounded-t-xl p-6 max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
+          <div className="bg-white w-full rounded-t-xl p-4 max-h-[70vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-3">
               <h3 className="text-lg font-semibold text-gray-900">
                 Order Summary
               </h3>
@@ -498,131 +503,56 @@ export function POSSystem() {
               </button>
             </div>
 
-            {/* Customer Info */}
-            <div className="space-y-3 mb-4">
-              <input
-                type="text"
-                placeholder="Customer Name (Optional)"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-              />
-
-              <select
-                value={selectedTable}
-                onChange={(e) => setSelectedTable(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-              >
-                <option value="">Select Table (Optional)</option>
-                {tables?.map((table) => (
-                  <option key={table._id} value={table._id}>
-                    Table {table.tableNumber} (Capacity: {table.capacity})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Order Items */}
-            <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
-              {selectedItems.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">
-                  No items selected
-                </p>
-              ) : (
-                selectedItems.map((item) => (
-                  <div
-                    key={item._id}
-                    className="flex items-center justify-between bg-gray-50 rounded-lg p-3"
-                  >
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">
-                        {item.itemName}
-                      </h4>
-                      <p className="text-sm text-gray-600">
-                        ₹{item.unitPrice} each
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() =>
-                          updateQuantity(item._id, item.quantity - 1)
-                        }
-                        className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-sm font-bold"
-                      >
-                        -
-                      </button>
-                      <span className="w-8 text-center font-medium">
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() =>
-                          updateQuantity(item._id, item.quantity + 1)
-                        }
-                        className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold"
-                      >
-                        +
-                      </button>
-                    </div>
-                    <div className="ml-3 text-right">
-                      <p className="font-semibold text-gray-900">
-                        ₹{item.total}
-                      </p>
-                    </div>
+            {/* Order Items - Mobile optimized */}
+            <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
+              {selectedItems.map((item) => (
+                <div
+                  key={item._id}
+                  className="flex items-center justify-between bg-gray-50 rounded-lg p-2"
+                >
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-gray-900 text-sm truncate">
+                      {item.itemName}
+                    </h4>
+                    <p className="text-xs text-gray-600">
+                      ₹{item.unitPrice} × {item.quantity}
+                    </p>
                   </div>
-                ))
-              )}
+                  <div className="text-right">
+                    <p className="font-semibold text-gray-900 text-sm">
+                      ₹{item.total.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* Totals */}
-            {selectedItems.length > 0 && (
-              <div className="space-y-2 border-t pt-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-medium">₹{subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (18%):</span>
-                  <span className="font-medium">₹{tax.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Discount:</span>
-                  <input
-                    type="number"
-                    value={discount}
-                    onChange={(e) => setDiscount(Number(e.target.value))}
-                    className="w-20 px-2 py-1 border border-gray-300 rounded text-right"
-                    min="0"
-                    max={subtotal}
-                  />
-                </div>
-                <div className="flex justify-between text-lg font-bold border-t pt-2">
-                  <span>Total:</span>
-                  <span>₹{finalAmount.toFixed(2)}</span>
-                </div>
+            {/* Totals - Mobile optimized */}
+            <div className="space-y-1 border-t pt-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Subtotal:</span>
+                <span className="font-medium">₹{subtotal.toFixed(2)}</span>
               </div>
-            )}
+              <div className="flex justify-between">
+                <span className="text-gray-600">Tax (18%):</span>
+                <span className="font-medium">₹{tax.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between font-bold border-t pt-1.5 text-base">
+                <span>Total:</span>
+                <span>₹{finalAmount.toFixed(2)}</span>
+              </div>
+            </div>
 
-            {/* Action Buttons */}
-            <div className="space-y-2 mt-4">
+            {/* Action Buttons - Mobile optimized */}
+            <div className="space-y-2 mt-3">
               <button
                 onClick={() => {
                   void handleCreateOrder();
-                  setIsBillingVisible(true); // Close after order creation
+                  setIsBillingVisible(true);
                 }}
-                disabled={selectedItems.length === 0}
-                className="w-full bg-amber-600 text-white py-3 rounded-lg font-semibold hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full bg-amber-600 text-white py-2.5 rounded-lg font-semibold hover:bg-amber-700 transition-colors"
               >
                 Create Order
-              </button>
-              <button
-                onClick={() => {
-                  setSelectedItems([]);
-                  setDiscount(0);
-                  setIsBillingVisible(true); // Close after clearing
-                }}
-                className="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors"
-              >
-                Clear All
               </button>
             </div>
           </div>

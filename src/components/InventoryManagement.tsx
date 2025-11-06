@@ -193,31 +193,37 @@ export function InventoryManagement() {
         </h2>
         <button
           onClick={() => setShowAddForm(true)}
-          className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors"
+          className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors text-sm"
         >
           Add New Item
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-amber-100 dark:border-gray-700">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      {/* Filters - Compact and efficient */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm border border-amber-100 dark:border-gray-700">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div>
             <input
               type="text"
               placeholder="Search items..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
-          <div>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            >
-              <option value="all">All Categories</option>
+          <div className="md:col-span-3">
+            {/* Category Tabs - Similar to POS system */}
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => setSelectedCategory("all")}
+                className={`px-3 py-1.5 rounded-lg font-medium transition-colors text-sm ${
+                  selectedCategory === "all"
+                    ? "bg-amber-600 text-white"
+                    : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-amber-50 dark:hover:bg-gray-600"
+                }`}
+              >
+                All Categories
+              </button>
               {categories?.map((categoryObj: any) => {
                 // Handle both string and object formats for categories
                 const category =
@@ -227,17 +233,25 @@ export function InventoryManagement() {
                 // Skip empty categories
                 if (!category) return null;
                 return (
-                  <option key={category} value={category}>
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`px-3 py-1.5 rounded-lg font-medium transition-colors text-sm ${
+                      selectedCategory === category
+                        ? "bg-amber-600 text-white"
+                        : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-amber-50 dark:hover:bg-gray-600"
+                    }`}
+                  >
                     {category}
-                  </option>
+                  </button>
                 );
               })}
-            </select>
+            </div>
           </div>
           <div>
             <button
               onClick={() => setShowLowStockOnly(!showLowStockOnly)}
-              className={`w-full px-3 py-2 rounded-lg font-medium transition-colors ${
+              className={`w-full px-2 py-1.5 text-sm rounded-lg font-medium transition-colors ${
                 showLowStockOnly
                   ? "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800"
                   : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600"
@@ -249,7 +263,7 @@ export function InventoryManagement() {
           <div>
             <button
               onClick={() => setShowHiddenItems(!showHiddenItems)}
-              className={`w-full px-3 py-2 rounded-lg font-medium transition-colors ${
+              className={`w-full px-2 py-1.5 text-sm rounded-lg font-medium transition-colors ${
                 showHiddenItems
                   ? "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-800"
                   : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600"
@@ -261,7 +275,7 @@ export function InventoryManagement() {
         </div>
       </div>
 
-      {/* Inventory List */}
+      {/* Inventory List - Optimized for performance and UX */}
       <div>
         {!filteredInventory ? (
           <div className="flex justify-center items-center h-64">
@@ -282,37 +296,39 @@ export function InventoryManagement() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {filteredInventory.map((item) => (
               <div
                 key={item._id}
-                className={`border rounded-xl p-4 shadow-sm transition-all ${
+                className={`border rounded-lg p-3 shadow-sm transition-all ${
                   item.isActive
                     ? "bg-white dark:bg-gray-800 border-amber-100 dark:border-gray-700"
                     : "bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 opacity-75"
                 }`}
               >
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="min-w-0">
+                    <h3 className="font-medium text-gray-900 dark:text-white text-sm truncate">
                       {item.itemName}
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
                       {item.category}
                     </p>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-0.5">
                     <button
                       onClick={() => handleEdit(item)}
-                      className="p-1.5 text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 rounded-full hover:bg-amber-50 dark:hover:bg-gray-600"
+                      className="p-1 text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 rounded-full hover:bg-amber-50 dark:hover:bg-gray-600"
+                      aria-label="Edit item"
                     >
-                      <span className="text-sm">✏️</span>
+                      <span className="text-xs">✏️</span>
                     </button>
                     <button
                       onClick={() => void handleDeleteItem(item._id)}
-                      className="p-1.5 text-gray-500 hover:text-red-600 dark:hover:text-red-400 rounded-full hover:bg-red-50 dark:hover:bg-gray-600"
+                      className="p-1 text-gray-500 hover:text-red-600 dark:hover:text-red-400 rounded-full hover:bg-red-50 dark:hover:bg-gray-600"
+                      aria-label="Delete item"
                     >
-                      <span className="text-sm">🗑️</span>
+                      <span className="text-xs">🗑️</span>
                     </button>
                   </div>
                 </div>
@@ -321,18 +337,19 @@ export function InventoryManagement() {
                   <img
                     src={item.image}
                     alt={item.itemName}
-                    className="w-full h-32 object-cover rounded-lg mb-3"
+                    className="w-full h-20 object-cover rounded-md mb-2"
+                    loading="lazy"
                   />
                 ) : (
-                  <div className="w-full h-32 bg-gray-100 dark:bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
-                    <span className="text-gray-400 dark:text-gray-500">
+                  <div className="w-full h-20 bg-gray-100 dark:bg-gray-700 rounded-md mb-2 flex items-center justify-center">
+                    <span className="text-gray-400 dark:text-gray-500 text-xs">
                       No Image
                     </span>
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <div className="flex justify-between">
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
                     <span className="text-gray-600 dark:text-gray-400">
                       Price:
                     </span>
@@ -340,7 +357,7 @@ export function InventoryManagement() {
                       ₹{item.unitPrice.toFixed(2)}
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-xs">
                     <span className="text-gray-600 dark:text-gray-400">
                       Stock:
                     </span>
@@ -354,7 +371,7 @@ export function InventoryManagement() {
                       {item.quantity} units
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-xs">
                     <span className="text-gray-600 dark:text-gray-400">
                       Threshold:
                     </span>
@@ -365,31 +382,31 @@ export function InventoryManagement() {
                 </div>
 
                 {item.quantity <= item.lowStockThreshold && (
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200">
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200">
                       Low Stock
                     </span>
                     {!item.isActive && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
                         Hidden
                       </span>
                     )}
                   </div>
                 )}
                 {item.quantity > item.lowStockThreshold && !item.isActive && (
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
                       Hidden
                     </span>
                   </div>
                 )}
 
-                <div className="flex gap-2 mt-4">
+                <div className="flex gap-1 mt-3">
                   <button
                     onClick={() =>
                       void handleToggleItemStatus(item._id, item.isActive)
                     }
-                    className={`flex-1 px-3 py-1.5 text-xs rounded-lg font-medium transition-colors ${
+                    className={`flex-1 px-2 py-1 text-xs rounded-md font-medium transition-colors ${
                       item.isActive
                         ? "bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-200 dark:hover:bg-red-900/50"
                         : "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-200 dark:hover:bg-green-900/50"
@@ -404,11 +421,11 @@ export function InventoryManagement() {
         )}
       </div>
 
-      {/* Add Item Modal */}
+      {/* Add Item Modal - Optimized for performance */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-3">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Add New Item
               </h3>
@@ -437,7 +454,7 @@ export function InventoryManagement() {
                 e.preventDefault();
                 void handleAddItem(e);
               }}
-              className="space-y-4"
+              className="space-y-3"
             >
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -449,7 +466,7 @@ export function InventoryManagement() {
                   onChange={(e) =>
                     setFormData({ ...formData, itemName: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
                 />
               </div>
@@ -458,30 +475,35 @@ export function InventoryManagement() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Category *
                 </label>
+                {/* Category Tabs for Form */}
+                <div className="flex gap-2 flex-wrap mb-2">
+                  {categories?.map((categoryObj: any) => {
+                    // Handle both string and object formats for categories
+                    const category =
+                      typeof categoryObj === "string"
+                        ? categoryObj
+                        : categoryObj.name || categoryObj.category || "";
+                    // Skip empty categories
+                    if (!category) return null;
+                    return (
+                      <button
+                        key={category}
+                        type="button"
+                        onClick={() =>
+                          setFormData({ ...formData, category })
+                        }
+                        className={`px-3 py-1.5 rounded-lg font-medium transition-colors text-sm ${
+                          formData.category === category
+                            ? "bg-amber-600 text-white"
+                            : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-amber-50 dark:hover:bg-gray-600"
+                        }`}
+                      >
+                        {category}
+                      </button>
+                    );
+                  })}
+                </div>
                 <div className="flex gap-2">
-                  <select
-                    value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  >
-                    <option value="">Select existing category</option>
-                    {categories?.map((categoryObj: any) => {
-                      // Handle both string and object formats for categories
-                      const category =
-                        typeof categoryObj === "string"
-                          ? categoryObj
-                          : categoryObj.name || categoryObj.category || "";
-                      // Skip empty categories
-                      if (!category) return null;
-                      return (
-                        <option key={category} value={category}>
-                          {category}
-                        </option>
-                      );
-                    })}
-                  </select>
                   <input
                     type="text"
                     value={formData.category}
@@ -489,15 +511,15 @@ export function InventoryManagement() {
                       setFormData({ ...formData, category: e.target.value })
                     }
                     placeholder="Or type new category"
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="flex-1 px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Select from existing categories or type a new one
+                  Select existing category or type a new one
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Quantity *
@@ -511,7 +533,7 @@ export function InventoryManagement() {
                         quantity: parseInt(e.target.value) || 0,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
                   />
                 </div>
@@ -529,7 +551,7 @@ export function InventoryManagement() {
                         unitPrice: parseFloat(e.target.value) || 0,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
                   />
                 </div>
@@ -548,7 +570,7 @@ export function InventoryManagement() {
                       lowStockThreshold: parseInt(e.target.value) || 0,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -562,7 +584,7 @@ export function InventoryManagement() {
                   onChange={(e) =>
                     setFormData({ ...formData, supplier: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -576,7 +598,7 @@ export function InventoryManagement() {
                   onChange={(e) =>
                     setFormData({ ...formData, barcode: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -590,11 +612,11 @@ export function InventoryManagement() {
                   onChange={(e) =>
                     setFormData({ ...formData, image: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="https://example.com/image.jpg"
                 />
                 <div className="flex gap-2 mt-2">
-                  <label className="px-3 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors cursor-pointer">
+                  <label className="px-2 py-1.5 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors cursor-pointer text-sm">
                     Upload Image
                     <input
                       type="file"
@@ -623,24 +645,24 @@ export function InventoryManagement() {
                     <img 
                       src={formData.image} 
                       alt="Preview" 
-                      className="w-16 h-16 object-cover rounded-lg border border-gray-300"
+                      className="w-12 h-12 object-cover rounded-lg border border-gray-300"
                       onError={(e) => {
                         // If the image fails to load, show a placeholder
                         const target = e.target as HTMLImageElement;
-                        target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'%3E%3C/circle%3E%3Cpath d='M21 15l-5-5L5 21'%3E%3C/path%3E%3C/svg%3E";
+                        target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'%3E%3C/circle%3E%3Cpath d='M21 15l-5-5L5 21'%3E%3C/path%3E%3C/svg%3E";
                       }}
                     />
                   </div>
                 )}
                 <p className="text-xs text-gray-500 mt-1">
-                  Enter URL or upload an image (JPG, PNG, GIF)
+                  Enter URL or upload an image
                 </p>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-2 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 bg-amber-600 text-white py-2 rounded-lg font-medium hover:bg-amber-700 transition-colors"
+                  className="flex-1 bg-amber-600 text-white py-2 rounded-lg font-medium hover:bg-amber-700 transition-colors text-sm"
                 >
                   Add Item
                 </button>
@@ -659,7 +681,7 @@ export function InventoryManagement() {
                       image: "",
                     });
                   }}
-                  className="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white py-2 rounded-lg font-medium hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+                  className="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white py-2 rounded-lg font-medium hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors text-sm"
                 >
                   Cancel
                 </button>
@@ -669,11 +691,11 @@ export function InventoryManagement() {
         </div>
       )}
 
-      {/* Edit Item Modal */}
+      {/* Edit Item Modal - Optimized for performance */}
       {showEditForm && editingItem && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-3">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Edit Item
               </h3>
@@ -703,7 +725,7 @@ export function InventoryManagement() {
                 e.preventDefault();
                 void handleUpdateItem(e);
               }}
-              className="space-y-4"
+              className="space-y-3"
             >
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -715,7 +737,7 @@ export function InventoryManagement() {
                   onChange={(e) =>
                     setFormData({ ...formData, itemName: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
                 />
               </div>
@@ -730,12 +752,12 @@ export function InventoryManagement() {
                   onChange={(e) =>
                     setFormData({ ...formData, category: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Quantity *
@@ -749,7 +771,7 @@ export function InventoryManagement() {
                         quantity: parseInt(e.target.value) || 0,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
                   />
                 </div>
@@ -767,7 +789,7 @@ export function InventoryManagement() {
                         unitPrice: parseFloat(e.target.value) || 0,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     required
                   />
                 </div>
@@ -786,7 +808,7 @@ export function InventoryManagement() {
                       lowStockThreshold: parseInt(e.target.value) || 0,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -800,7 +822,7 @@ export function InventoryManagement() {
                   onChange={(e) =>
                     setFormData({ ...formData, supplier: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -814,13 +836,13 @@ export function InventoryManagement() {
                   onChange={(e) =>
                     setFormData({ ...formData, barcode: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Image URL
+                  Image
                 </label>
                 <input
                   type="text"
@@ -828,15 +850,57 @@ export function InventoryManagement() {
                   onChange={(e) =>
                     setFormData({ ...formData, image: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="https://example.com/image.jpg"
                 />
+                <div className="flex gap-2 mt-2">
+                  <label className="px-2 py-1.5 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors cursor-pointer text-sm">
+                    Upload Image
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          // Create a preview URL for the image
+                          const previewUrl = URL.createObjectURL(file);
+                          setFormData({ 
+                            ...formData, 
+                            image: previewUrl
+                          });
+                          
+                          // In a real implementation, you would upload to a service like Cloudinary
+                          // For now, we'll just use the preview URL
+                          toast.info("Image selected. In a production environment, this would be uploaded to a cloud storage service.");
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+                {formData.image && (
+                  <div className="mt-2">
+                    <img 
+                      src={formData.image} 
+                      alt="Preview" 
+                      className="w-12 h-12 object-cover rounded-lg border border-gray-300"
+                      onError={(e) => {
+                        // If the image fails to load, show a placeholder
+                        const target = e.target as HTMLImageElement;
+                        target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'%3E%3C/circle%3E%3Cpath d='M21 15l-5-5L5 21'%3E%3C/path%3E%3C/svg%3E";
+                      }}
+                    />
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter URL or upload an image
+                </p>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-2 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 bg-amber-600 text-white py-2 rounded-lg font-medium hover:bg-amber-700 transition-colors"
+                  className="flex-1 bg-amber-600 text-white py-2 rounded-lg font-medium hover:bg-amber-700 transition-colors text-sm"
                 >
                   Update Item
                 </button>
@@ -856,7 +920,7 @@ export function InventoryManagement() {
                       image: "",
                     });
                   }}
-                  className="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white py-2 rounded-lg font-medium hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+                  className="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white py-2 rounded-lg font-medium hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors text-sm"
                 >
                   Cancel
                 </button>

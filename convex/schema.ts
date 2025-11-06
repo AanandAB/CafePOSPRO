@@ -89,6 +89,8 @@ const applicationTables = {
     subtotal: v.number(),
     discount: v.number(),
     tax: v.number(),
+    tip: v.optional(v.number()), // Add tip field to orders
+    tipAssignedTo: v.optional(v.id("staff")), // Track which waiter received the tip
     finalAmount: v.number(),
     status: v.union(
       v.literal("active"),
@@ -154,12 +156,26 @@ const applicationTables = {
     totalWorkingDays: v.number(),
     deductions: v.number(),
     bonus: v.number(),
+    tips: v.number(), // Add tips field
     finalAmount: v.number(),
     status: v.union(v.literal("pending"), v.literal("paid")),
     paymentDate: v.optional(v.number()),
   })
     .index("by_staff", ["staffId"])
     .index("by_month_year", ["month", "year"]),
+
+  // Tips tracking
+  tips: defineTable({
+    orderId: v.id("orders"),
+    amount: v.number(),
+    assignedTo: v.id("staff"), // The waiter who receives the tip
+    assignedBy: v.optional(v.id("staff")), // Manager who assigned/distributed the tip
+    status: v.union(v.literal("pending"), v.literal("paid")), // Track if tip has been paid
+    date: v.number(), // Date the tip was received
+    paymentDate: v.optional(v.number()), // Date the tip was paid out
+  })
+    .index("by_staff", ["assignedTo"])
+    .index("by_status", ["status"]),
 
   // Attendance tracking
   attendance: defineTable({
@@ -184,12 +200,19 @@ const applicationTables = {
     message: v.string(),
     userId: v.optional(v.id("staff")),
     orderId: v.optional(v.string()),
+    tableId: v.optional(v.id("tables")),
+    tableNumber: v.optional(v.string()),
     timestamp: v.number(),
     read: v.boolean(),
     readAt: v.optional(v.number()),
+    accepted: v.optional(v.boolean()), // Track if notification has been accepted
+    acceptedBy: v.optional(v.id("staff")), // Track which staff member accepted
+    acceptedAt: v.optional(v.number()), // Track when accepted
   })
     .index("by_user", ["userId"])
-    .index("by_read", ["read"]),
+    .index("by_read", ["read"])
+    .index("by_table", ["tableId"])
+    .index("by_accepted", ["accepted"]),
 
   // Customer Feedback
   feedback: defineTable({

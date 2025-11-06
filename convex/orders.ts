@@ -89,7 +89,6 @@ export const getOrdersByTable = query({
     return await ctx.db
       .query("orders")
       .withIndex("by_table", (q) => q.eq("tableId", args.tableId))
-      .filter((q) => q.eq(q.field("status"), "active"))
       .collect();
   },
 });
@@ -145,6 +144,7 @@ export const createOrder = mutation({
     waiterId: v.optional(v.id("staff")),
     notes: v.optional(v.string()),
     enableGST: v.optional(v.boolean()), // Add GST setting parameter
+    tipAmount: v.optional(v.number()), // Add tip amount parameter
   },
   handler: async (ctx, args) => {
     // For staff members using custom auth, we'll allow order creation
@@ -171,7 +171,8 @@ export const createOrder = mutation({
     // Apply GST only if enabled (default to true if not specified)
     const enableGST = args.enableGST !== false;
     const tax = enableGST ? subtotal * 0.18 : 0; // 18% GST
-    const finalAmount = subtotal + tax;
+    const tipAmount = args.tipAmount || 0; // Get tip amount
+    const finalAmount = subtotal + tax + tipAmount;
 
     // Only include waiterId in the order if it's a valid staff ID
     const orderData: any = {
@@ -184,6 +185,7 @@ export const createOrder = mutation({
       subtotal,
       discount: 0,
       tax,
+      tip: tipAmount, // Store tip amount in order
       finalAmount,
       status: "active",
       paymentStatus: "pending",
@@ -263,13 +265,16 @@ export const completeOrder = mutation({
     ),
     cashierId: v.id("staff"),
     discount: v.optional(v.number()),
+    tip: v.optional(v.number()), // Add tip parameter
+    tipAssignedTo: v.optional(v.id("staff")), // Add tip assigned to parameter
   },
   handler: async (ctx, args) => {
     const order = await ctx.db.get(args.orderId);
     if (!order) throw new Error("Order not found");
 
     const discount = args.discount || 0;
-    const finalAmount = order.subtotal + order.tax - discount;
+    const tip = args.tip || 0;
+    const finalAmount = order.subtotal + order.tax - discount + tip;
 
     // Update order
     await ctx.db.patch(args.orderId, {
@@ -278,8 +283,21 @@ export const completeOrder = mutation({
       paymentMode: args.paymentMode,
       cashierId: args.cashierId,
       discount,
+      tip, // Add tip to order
+      tipAssignedTo: args.tipAssignedTo, // Add tip assigned to order
       finalAmount,
     });
+
+    // If there's a tip and it's assigned to a waiter, create a tip record
+    if (tip > 0 && args.tipAssignedTo) {
+      await ctx.db.insert("tips", {
+        orderId: args.orderId,
+        amount: tip,
+        assignedTo: args.tipAssignedTo,
+        status: "pending",
+        date: Date.now(),
+      });
+    }
 
     // Create sales record
     const table = order.tableId ? await ctx.db.get(order.tableId) : null;

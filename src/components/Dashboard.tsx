@@ -10,9 +10,13 @@ import { Settings } from "./Settings";
 import { KitchenView } from "./KitchenView";
 import { FeedbackManagement } from "./FeedbackManagement";
 import { ReportsDashboard } from "./ReportsDashboard";
+import { TipManagement } from "./TipManagement";
+import { WaiterTips } from "./WaiterTips";
+import { StaffNotifications } from "./StaffNotifications";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useStaffAuth } from "../contexts/StaffAuthContext";
+import { Id } from "../../convex/_generated/dataModel";
 
 interface DashboardProps {
   currentView: string;
@@ -155,6 +159,53 @@ export function Dashboard({ currentView }: DashboardProps) {
           );
         }
         return <KitchenView />;
+      case "notifications":
+        // Notifications view for waiters and managers
+        if (!hasPermission(["manager", "waiter"])) {
+          return (
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Access Denied
+              </h2>
+              <p className="text-gray-600">
+                You don't have permission to access notifications.
+              </p>
+            </div>
+          );
+        }
+        // Show notifications for staff members
+        if (actualStaffDetails?.id) {
+          return <StaffNotifications staffId={actualStaffDetails.id as unknown as Id<"staff">} />;
+        }
+        return (
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              Notifications
+            </h2>
+            <p className="text-gray-600">
+              Notifications will appear here when customers request service.
+            </p>
+          </div>
+        );
+      case "mytips":
+        // Waiter tips accessible only to waiters and managers
+        if (!hasPermission(["manager", "waiter"])) {
+          return (
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Access Denied
+              </h2>
+              <p className="text-gray-600">
+                You don't have permission to access tip information.
+              </p>
+            </div>
+          );
+        }
+        // For waiters, show their own tips; for managers, redirect to tip management
+        if (actualStaffDetails?.role === "waiter" && actualStaffDetails?.id) {
+          return <WaiterTips staffId={actualStaffDetails.id} />;
+        }
+        return <TipManagement />;
       case "settings":
         // Settings accessible only to managers
         if (!hasPermission(["manager"])) {
@@ -185,6 +236,21 @@ export function Dashboard({ currentView }: DashboardProps) {
           );
         }
         return <FeedbackManagement />;
+      case "tips":
+        // Tip management accessible only to managers
+        if (!hasPermission(["manager"])) {
+          return (
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Access Denied
+              </h2>
+              <p className="text-gray-600">
+                You don't have permission to access tip management.
+              </p>
+            </div>
+          );
+        }
+        return <TipManagement />;
       case "reports":
         // Reports accessible only to managers
         if (!hasPermission(["manager"])) {

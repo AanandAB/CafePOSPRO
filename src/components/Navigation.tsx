@@ -23,6 +23,7 @@ export function Navigation({ currentView, onViewChange }: NavigationProps) {
     { id: "inventory", label: "Inventory", icon: "📦" },
     { id: "tables", label: "Tables", icon: "🪑" },
     { id: "staff", label: "Staff", icon: "👥" },
+    { id: "tips", label: "Tip Management", icon: "💰" }, // Add tip management
     { id: "reports", label: "Reports", icon: "📈" },
     { id: "feedback", label: "Feedback", icon: "💬" },
     { id: "sales", label: "Sales", icon: "💰" },
@@ -35,6 +36,8 @@ export function Navigation({ currentView, onViewChange }: NavigationProps) {
     { id: "pos", label: "POS System", icon: "🛒" },
     { id: "orders", label: "My Orders", icon: "📋" },
     { id: "tables", label: "Tables", icon: "🪑" },
+    { id: "notifications", label: "Notifications", icon: "🔔" }, // Add notifications
+    { id: "mytips", label: "My Tips", icon: "💰" }, // Add my tips for waiters
   ];
 
   const cashierItems = [

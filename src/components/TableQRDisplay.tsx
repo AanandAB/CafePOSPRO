@@ -3,6 +3,8 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import * as QRCode from "qrcode.react";
+import { toast } from "sonner";
+import { getAppBaseURL, getAllAccessibleURLs } from "../utils/network";
 
 interface Table {
   _id: Id<"tables">;
@@ -20,33 +22,22 @@ export function TableQRDisplay() {
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Detect network interfaces using the same logic as StaffManagement
+    // Detect network interfaces using dynamic detection
     const detectNetworkInterfaces = async () => {
       setIsLoading(true);
       try {
-        // Hardcode the correct IP for this environment
-        const port = window.location.port || "5173";
-        const correctIP = `http://192.168.1.10:${port}`;
-        const defaultIPs = [
-          correctIP,
-          `http://192.168.1.6:${port}`,
-          `http://192.168.0.10:${port}`,
-          `http://localhost:${port}`
-        ];
+        // Get all accessible URLs (works in both dev and prod)
+        const urls = await getAllAccessibleURLs();
         
-        setNetworkIPs(defaultIPs);
-        setSelectedIP(correctIP);
+        setNetworkIPs(urls);
+        // Select the first URL as default (should be the current IP)
+        setSelectedIP(urls[0]);
         setIsLoading(false);
       } catch (error) {
         console.warn("Could not detect network interfaces:", error);
-        // Fallback to hardcoded IPs
+        // Fallback to localhost
         const port = window.location.port || "5173";
-        const defaultIPs = [
-          `http://192.168.1.10:${port}`,
-          `http://192.168.1.6:${port}`,
-          `http://192.168.0.10:${port}`,
-          `http://localhost:${port}`
-        ];
+        const defaultIPs = [`http://localhost:${port}`];
         
         setNetworkIPs(defaultIPs);
         setSelectedIP(defaultIPs[0]);
@@ -57,10 +48,13 @@ export function TableQRDisplay() {
     // Run the detection when component mounts
     void detectNetworkInterfaces();
     
-    // Refresh IP detection every 30 seconds to catch network changes
+    // Refresh IP detection every 10 seconds to catch network changes quickly
     const interval = setInterval(() => {
-      void detectNetworkInterfaces();
-    }, 30000);
+      // Only refresh in development
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        void detectNetworkInterfaces();
+      }
+    }, 10000); // Check every 10 seconds instead of 30
     
     return () => {
       clearInterval(interval);
@@ -228,85 +222,65 @@ export function TableQRDisplay() {
               </select>
               <button
                 onClick={() => {
-                  void navigator.clipboard
+                  navigator.clipboard
                     .writeText(selectedIP)
                     .then(() => {
-                      console.log("Link copied to clipboard");
+                      toast.success("Link copied to clipboard");
                     })
                     .catch(() => {
-                      console.error("Failed to copy link");
+                      toast.error("Failed to copy link");
                     });
                 }}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors"
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
               >
                 Copy
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Select the network address that matches your WiFi network. 
-              The first option is usually correct for most setups.
+            <p className="mt-2 text-sm text-gray-500">
+              Select the network address that devices on your local network can access
             </p>
           </div>
 
-          {tables && tables.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {tables.map((table) => (
-                <div 
-                  key={table._id} 
-                  className="border border-gray-200 rounded-lg p-4 text-center hover:shadow-md transition-shadow"
-                >
-                  <h4 className="font-medium text-gray-900 mb-3">
-                    Table {table.tableNumber}
-                  </h4>
-                  
-                  <div className="flex justify-center mb-3" id={`qr-${table._id}`}>
-                    <QRCode.QRCodeSVG 
-                      value={`${selectedIP}/self-service/${table._id}`}
-                      size={128}
-                      level="M"
-                      includeMargin={true}
-                      className="bg-white p-2 rounded-lg border"
-                    />
-                  </div>
-                  
-                  <p className="text-xs text-gray-500 mb-2">
-                    Scan this QR code to order from Table {table.tableNumber}
-                  </p>
-                  
-                  <div className="text-xs font-mono bg-gray-100 p-2 rounded break-all">
-                    {selectedIP}/self-service/{table._id}
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {tables?.map((table) => (
+              <div
+                key={table._id}
+                className="bg-gray-50 rounded-xl p-5 text-center border border-gray-200"
+              >
+                <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                  Table {table.tableNumber}
+                </h4>
+                <div className="flex justify-center mb-3">
+                  <QRCode.QRCodeSVG
+                    id={`qr-${table._id}`}
+                    value={`${selectedIP}/self-service/${table._id}`}
+                    size={150}
+                    level={"H"}
+                    includeMargin={true}
+                    className="bg-white p-2 rounded-lg"
+                  />
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No tables available. Add tables to generate QR codes.</p>
-            </div>
-          )}
+                <p className="text-sm text-gray-600 break-all">
+                  {selectedIP}/self-service/{table._id}
+                </p>
+                <div className="mt-3">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      table.status === "available"
+                        ? "bg-green-100 text-green-800"
+                        : table.status === "occupied"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {table.status.charAt(0).toUpperCase() + table.status.slice(1)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </>
       )}
-      
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-        <p className="text-sm text-blue-800">
-          <strong>Instructions:</strong> Customers can scan these QR codes to access the self-service ordering system. 
-          Make sure the selected network address is accessible from customer devices on the same WiFi network.
-        </p>
-      </div>
-      
-      {/* Hidden div for printing */}
-      <div ref={printRef} className="hidden">
-        {tables?.map(table => (
-          <div key={table._id} id={`print-qr-${table._id}`}>
-            <QRCode.QRCodeSVG 
-              value={`${selectedIP}/self-service/${table._id}`}
-              size={150}
-              level="M"
-              includeMargin={true}
-            />
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

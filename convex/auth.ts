@@ -61,12 +61,20 @@ export const getStaffDetails = query({
       // This is a manager user
       const user = await ctx.db.get(userId);
       if (user) {
-        return {
-          id: user._id,
-          email: user.email,
-          name: user.name,
-          role: "manager", // Managers have manager role by default
-        };
+        // Get the corresponding staff entry for this manager
+        const staffEntry = await ctx.db
+          .query("staff")
+          .withIndex("by_email", (q: any) => q.eq("email", user.email))
+          .unique();
+        
+        if (staffEntry) {
+          return {
+            id: staffEntry._id, // Return the staff ID, not the user ID
+            email: user.email,
+            name: user.name,
+            role: "manager", // Managers have manager role by default
+          };
+        }
       }
     }
 

@@ -103,6 +103,7 @@ export function PaymentProcessor({
   const [upiPaymentStatus, setUpiPaymentStatus] = useState<"pending" | "success" | "failed">("pending");
   const [upiQrCodeData, setUpiQrCodeData] = useState("");
   const [transactionId, setTransactionId] = useState("");
+  const [tipAssignedTo, setTipAssignedTo] = useState<Id<"staff"> | undefined>(undefined); // Add state for tip assignment
   const [paymentGateway] = useState<PaymentGateway>(() => {
     // In a real implementation, you would load these from environment variables or settings
     const config: PaymentGatewayConfig = {
@@ -202,10 +203,26 @@ export function PaymentProcessor({
         throw new Error("No cashier found. Please ensure staff members exist in the system.");
       }
 
+      // Get tip information from order details
+      const tipAmount = orderDetails?.tip || 0;
+      // Use undefined instead of null for tipAssignedTo
+      const tipAssignedToValue = tipAssignedTo || undefined;
+
+      // Log the values for debugging
+      console.log("Completing payment with:", {
+        orderId,
+        paymentMode: mode,
+        cashierId,
+        tip: tipAmount,
+        tipAssignedTo: tipAssignedToValue
+      });
+
       await completeOrder({
         orderId,
         paymentMode: mode,
         cashierId,
+        tip: tipAmount,
+        tipAssignedTo: tipAssignedToValue,
       });
 
       // Handle automatic bill actions based on system settings
@@ -221,6 +238,7 @@ export function PaymentProcessor({
       onPaymentComplete(mode);
     } catch (error: any) {
       toast.error(`Payment failed: ${error.message || "Unknown error"}`);
+      console.error("Payment error:", error);
     } finally {
       setIsProcessing(false);
     }
@@ -667,153 +685,187 @@ ${paymentMode === "upi" ? `║ UPI ID: ${restaurantProfile?.upiId || "N/A"}` : "
   }
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Complete Payment</h3>
-      
-      <div className="mb-6">
-        <p className="text-2xl font-bold text-amber-600 mb-2">₹{amount}</p>
-        <p className="text-gray-600">Total Amount</p>
-      </div>
-      
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Payment Method
-        </label>
-        
-        <div className="grid grid-cols-3 gap-3">
+    <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">Complete Payment</h2>
           <button
-            onClick={() => setPaymentMode("upi")}
-            className={`p-3 rounded-lg border-2 transition-colors ${
-              paymentMode === "upi"
-                ? "border-amber-500 bg-amber-50"
-                : "border-gray-200 hover:border-gray-300"
-            }`}
+            onClick={onCancel}
+            className="text-gray-500 hover:text-gray-700"
           >
-            <div className="text-center">
-              <div className="text-2xl mb-1">📱</div>
-              <div className="text-sm font-medium">UPI</div>
-            </div>
-          </button>
-          
-          <button
-            onClick={() => setPaymentMode("cash")}
-            className={`p-3 rounded-lg border-2 transition-colors ${
-              paymentMode === "cash"
-                ? "border-amber-500 bg-amber-50"
-                : "border-gray-200 hover:border-gray-300"
-            }`}
-          >
-            <div className="text-center">
-              <div className="text-2xl mb-1">💵</div>
-              <div className="text-sm font-medium">Cash</div>
-            </div>
-          </button>
-          
-          <button
-            onClick={() => setPaymentMode("card")}
-            className={`p-3 rounded-lg border-2 transition-colors ${
-              paymentMode === "card"
-                ? "border-amber-500 bg-amber-50"
-                : "border-gray-200 hover:border-gray-300"
-            }`}
-          >
-            <div className="text-center">
-              <div className="text-2xl mb-1">💳</div>
-              <div className="text-sm font-medium">Card</div>
-            </div>
+            <span className="text-2xl">×</span>
           </button>
         </div>
-      </div>
-      
-      {paymentMode === "upi" && (
-        <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-800">
-            <strong>UPI Payment:</strong> Customer will scan the QR code to pay ₹{amount}
-          </p>
-          {restaurantProfile?.upiId ? (
-            <p className="text-xs text-blue-600 mt-1">
-              UPI ID: {restaurantProfile.upiId}
-            </p>
-          ) : (
-            <p className="text-xs text-red-600 mt-1">
-              UPI ID not configured. Please set it in Settings.
-            </p>
+
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-600">Amount to Pay:</span>
+            <span className="text-2xl font-bold text-gray-900">
+              ₹{amount.toFixed(2)}
+            </span>
+          </div>
+          
+          {/* Display tip information if there's a tip */}
+          {orderDetails?.tip && orderDetails.tip > 0 && (
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Tip Amount:</span>
+                <span className="font-medium text-gray-900">
+                  ₹{orderDetails.tip.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-gray-600">Total:</span>
+                <span className="font-bold text-gray-900">
+                  ₹{(amount + orderDetails.tip).toFixed(2)}
+                </span>
+              </div>
+            </div>
           )}
         </div>
-      )}
-      
-      <div className="flex flex-col sm:flex-row gap-3">
-        <button
-          onClick={onCancel}
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
-          disabled={isProcessing}
-        >
-          Cancel
-        </button>
-        
-        {isProcessing ? (
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-amber-600 mr-2"></div>
-            <span>Processing...</span>
+
+        {/* Tip Assignment Section - Only show if there's a tip */}
+        {orderDetails?.tip && orderDetails.tip > 0 && allStaff && (
+          <div className="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+            <h3 className="font-medium text-amber-800 mb-2">Assign Tip</h3>
+            <p className="text-sm text-amber-700 mb-3">
+              Select which waiter should receive this tip
+            </p>
+            <select
+              value={tipAssignedTo || ""}
+              onChange={(e) => setTipAssignedTo(e.target.value as Id<"staff">)}
+              className="w-full px-3 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-50"
+            >
+              <option value="">Select a waiter</option>
+              {allStaff
+                .filter((staff: any) => staff.role === "waiter" && staff.isActive)
+                .map((staff: any) => (
+                  <option key={staff._id} value={staff._id}>
+                    {staff.name} ({staff.role})
+                  </option>
+                ))}
+            </select>
           </div>
-        ) : (
-          <>
-            {paymentMode === "upi" ? (
-              <button
-                onClick={() => void handleUpiPayment()}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors flex-1"
-                disabled={!restaurantProfile?.upiId || isProcessing}
-              >
-                {isProcessing ? "Generating Payment..." : "Generate UPI Payment"}
-              </button>
-            ) : paymentMode === "cash" ? (
-              <button
-                onClick={handleCashPayment}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors flex-1"
-                disabled={isProcessing}
-              >
-                Complete Cash Payment
-              </button>
-            ) : (
-              <button
-                onClick={handleCardPayment}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors flex-1"
-                disabled={isProcessing}
-              >
-                Complete Card Payment
-              </button>
-            )}
-          </>
         )}
-      </div>
-      
-      {/* Bill printing and download options */}
-      <div className="mt-6 pt-4 border-t border-gray-200">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={printBill}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors flex-1"
-          >
-            Print Bill
-          </button>
-          <button
-            onClick={downloadBill}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors flex-1"
-          >
-            Download Bill
-          </button>
-        </div>
-        
-        {/* System settings info */}
-        {(systemSettings.autoDownloadBills || systemSettings.printBillsAutomatically) && (
-          <div className="mt-3 text-xs text-gray-500">
-            {systemSettings.autoDownloadBills && systemSettings.printBillsAutomatically ? (
-              <span>Auto-download and print enabled in settings</span>
-            ) : systemSettings.autoDownloadBills ? (
-              <span>Auto-download enabled in settings</span>
-            ) : (
-              <span>Auto-print enabled in settings</span>
+
+        {/* Payment Method Selection */}
+        {!showUpiScanner && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Payment Method
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                <button
+                  onClick={() => setPaymentMode("cash")}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    paymentMode === "cash"
+                      ? "border-green-500 bg-green-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div className="flex flex-col items-center">
+                    <span className="text-2xl">💵</span>
+                    <span className="mt-1 text-sm font-medium">Cash</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setPaymentMode("upi")}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    paymentMode === "upi"
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div className="flex flex-col items-center">
+                    <span className="text-2xl">📱</span>
+                    <span className="mt-1 text-sm font-medium">UPI</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setPaymentMode("card")}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    paymentMode === "card"
+                      ? "border-purple-500 bg-purple-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div className="flex flex-col items-center">
+                    <span className="text-2xl">💳</span>
+                    <span className="mt-1 text-sm font-medium">Card</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                if (paymentMode === "upi") {
+                  void handleUpiPayment();
+                } else if (paymentMode === "cash") {
+                  void handleCashPayment();
+                } else if (paymentMode === "card") {
+                  void handleCardPayment();
+                }
+              }}
+              disabled={isProcessing || (orderDetails?.tip && orderDetails.tip > 0 && !tipAssignedTo ? true : false)}
+              className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-colors ${
+                (isProcessing || (orderDetails?.tip && orderDetails.tip > 0 && !tipAssignedTo))
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700"
+              }`}
+            >
+              {isProcessing ? (
+                <span className="flex items-center justify-center">
+                  <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                  Processing...
+                </span>
+              ) : (
+                `Pay ₹${orderDetails?.tip && orderDetails.tip > 0 ? (amount + orderDetails.tip).toFixed(2) : amount.toFixed(2)}`
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* UPI Payment Scanner */}
+        {showUpiScanner && (
+          <div className="text-center">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Scan to Pay
+            </h3>
+            
+            {upiQrCodeData && (
+              <div className="flex justify-center mb-6">
+                <QRCode.QRCodeCanvas 
+                  value={upiQrCodeData} 
+                  size={200}
+                  level={"M"}
+                  includeMargin={true}
+                />
+              </div>
             )}
+            
+            <p className="text-gray-600 mb-6">
+              Scan the QR code with any UPI app to complete payment
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowUpiScanner(false);
+                  setUpiPaymentStatus("pending");
+                }}
+                className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpiPaymentSuccess}
+                className="flex-1 py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                Payment Received
+              </button>
+            </div>
           </div>
         )}
       </div>
