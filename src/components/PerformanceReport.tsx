@@ -149,7 +149,7 @@ export function PerformanceReport({
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h3 className="text-xl font-bold text-gray-900">
+        <h3 className="text-xl font-bold text-gray-900 transition-colors duration-300 hover:text-amber-600">
           Performance Metrics & Analytics
         </h3>
         <div className="text-sm text-gray-600">
@@ -158,8 +158,8 @@ export function PerformanceReport({
       </div>
 
       {/* Key Performance Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-4 text-white">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-4 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
           <h4 className="text-sm font-medium opacity-90">Total Revenue</h4>
           <p className="text-2xl font-bold">
             ₹
@@ -170,12 +170,12 @@ export function PerformanceReport({
           </p>
         </div>
 
-        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl p-4 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
           <h4 className="text-sm font-medium opacity-90">Total Orders</h4>
           <p className="text-2xl font-bold">{totalOrders}</p>
         </div>
 
-        <div className="bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-xl p-4 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
           <h4 className="text-sm font-medium opacity-90">Avg Order Value</h4>
           <p className="text-2xl font-bold">
             ₹
@@ -186,27 +186,27 @@ export function PerformanceReport({
           </p>
         </div>
 
-        <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
           <h4 className="text-sm font-medium opacity-90">Active Staff</h4>
           <p className="text-2xl font-bold">{totalStaff}</p>
         </div>
       </div>
 
       {/* Business Performance */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Peak Hours */}
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-xl p-4 border border-gray-200 transition-all duration-300 hover:shadow-md">
           <h4 className="font-semibold text-gray-900 mb-4">
             Peak Business Hours
           </h4>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg transition-all duration-200 hover:bg-amber-50">
               <div className="font-medium text-gray-900">Busiest Hour</div>
               <div className="font-bold text-amber-600">
                 {peakHour !== "N/A" ? `${peakHour}:00` : "N/A"}
               </div>
             </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg transition-all duration-200 hover:bg-amber-50">
               <div className="font-medium text-gray-900">Revenue per Staff</div>
               <div className="font-bold text-green-600">
                 ₹
@@ -216,7 +216,7 @@ export function PerformanceReport({
                 })}
               </div>
             </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg transition-all duration-200 hover:bg-amber-50">
               <div className="font-medium text-gray-900">Orders per Day</div>
               <div className="font-bold text-blue-600">
                 {filteredSales.length > 0
@@ -228,13 +228,13 @@ export function PerformanceReport({
         </div>
 
         {/* Staff Distribution */}
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-xl p-4 border border-gray-200 transition-all duration-300 hover:shadow-md">
           <h4 className="font-semibold text-gray-900 mb-4">
             Staff Distribution
           </h4>
           <div className="space-y-3">
             {Object.entries(roleDistribution).map(([role, count]) => (
-              <div key={role} className="flex items-center justify-between">
+              <div key={role} className="flex items-center justify-between p-2 rounded transition-all duration-200 hover:bg-amber-50">
                 <div className="flex items-center">
                   <div className="w-3 h-3 bg-amber-500 rounded-full mr-2"></div>
                   <span className="text-gray-700 capitalize">{role}</span>
@@ -246,7 +246,7 @@ export function PerformanceReport({
         </div>
 
         {/* Performance Indicators */}
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-xl p-4 border border-gray-200 transition-all duration-300 hover:shadow-md">
           <h4 className="font-semibold text-gray-900 mb-4">
             Performance Indicators
           </h4>
@@ -258,7 +258,7 @@ export function PerformanceReport({
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="bg-green-500 h-2 rounded-full"
+                  className="bg-green-500 h-2 rounded-full transition-all duration-500"
                   style={{ width: "94%" }}
                 ></div>
               </div>
@@ -271,7 +271,7 @@ export function PerformanceReport({
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="bg-blue-500 h-2 rounded-full"
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-500"
                   style={{ width: "98.5%" }}
                 ></div>
               </div>
@@ -284,7 +284,7 @@ export function PerformanceReport({
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="bg-purple-500 h-2 rounded-full"
+                  className="bg-purple-500 h-2 rounded-full transition-all duration-500"
                   style={{ width: "85%" }}
                 ></div>
               </div>
@@ -294,7 +294,7 @@ export function PerformanceReport({
       </div>
 
       {/* Staff Performance */}
-      <div className="bg-white rounded-xl p-4 border border-gray-200">
+      <div className="bg-white rounded-xl p-4 border border-gray-200 transition-all duration-300 hover:shadow-md">
         <h4 className="font-semibold text-gray-900 mb-4">
           Staff Performance Overview
         </h4>
@@ -323,18 +323,18 @@ export function PerformanceReport({
               {activeStaff.map((member, index) => (
                 <tr
                   key={index}
-                  className="border-b border-gray-100 hover:bg-gray-50"
+                  className="border-b border-gray-100 hover:bg-amber-50 transition-colors duration-200"
                 >
                   <td className="py-3 px-4 font-medium text-gray-900">
                     {member.name}
                   </td>
                   <td className="py-3 px-4">
-                    <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-medium capitalize">
+                    <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-medium capitalize transition-colors duration-200">
                       {member.role}
                     </span>
                   </td>
                   <td className="py-3 px-4">
-                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium transition-colors duration-200">
                       {member.activeStatus}
                     </span>
                   </td>
@@ -356,15 +356,15 @@ export function PerformanceReport({
       </div>
 
       {/* Real-time Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl p-4 text-white">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl p-4 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
           <h4 className="text-sm font-medium opacity-90">Active Orders</h4>
           <p className="text-2xl font-bold">
             {ordersData ? ordersData.length : 0}
           </p>
         </div>
 
-        <div className="bg-gradient-to-r from-pink-500 to-rose-500 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-r from-pink-500 to-rose-500 rounded-xl p-4 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
           <h4 className="text-sm font-medium opacity-90">Tables Occupied</h4>
           <p className="text-2xl font-bold">
             {ordersData
@@ -373,7 +373,7 @@ export function PerformanceReport({
           </p>
         </div>
 
-        <div className="bg-gradient-to-r from-teal-500 to-green-500 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-r from-teal-500 to-green-500 rounded-xl p-4 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
           <h4 className="text-sm font-medium opacity-90">Avg Wait Time</h4>
           <p className="text-2xl font-bold">8 min</p>
         </div>

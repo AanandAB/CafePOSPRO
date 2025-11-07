@@ -5,8 +5,41 @@ import { useState, useEffect } from "react";
 export function Analytics() {
   const [selectedPeriod, setSelectedPeriod] = useState(30);
   const [revenueType, setRevenueType] = useState("revenue");
+  const [activeTab, setActiveTab] = useState("overview");
+  
   const stats = useQuery(api.analytics.getDashboardStats);
   const revenueChart = useQuery(api.analytics.getRevenueChart, {
+    days: selectedPeriod,
+  });
+  
+  // New queries for the additional features
+  const laborCostAnalysis = useQuery(api.analytics.getLaborCostAnalysis, {
+    days: selectedPeriod,
+  });
+  
+  const vendorAnalysis = useQuery(api.analytics.getVendorAnalysis, {
+    days: selectedPeriod,
+  });
+  
+  const customerInsights = useQuery(api.analytics.getCustomerInsights, {
+    days: selectedPeriod,
+  });
+  
+  const budgetPlanningData = useQuery(api.analytics.getBudgetPlanningData, {
+    months: 12,
+  });
+  
+  const orderPrioritizationData = useQuery(api.analytics.getOrderPrioritizationData);
+  
+  const tableTurnaroundAnalysis = useQuery(api.analytics.getTableTurnaroundAnalysis, {
+    days: selectedPeriod,
+  });
+  
+  const preparationTimeAnalysis = useQuery(api.analytics.getPreparationTimeAnalysis, {
+    days: selectedPeriod,
+  });
+  
+  const busyHourAnalysis = useQuery(api.analytics.getBusyHourAnalysis, {
     days: selectedPeriod,
   });
 
@@ -199,452 +232,989 @@ export function Analytics() {
   const totalRevenue = revenueChart
     ? revenueChart.reduce((sum, day) => sum + day.revenue, 0)
     : 0;
-  const totalOrders = revenueChart
-    ? revenueChart.reduce((sum, day) => sum + day.orders, 0)
-    : 0;
-  const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-  // Calculate growth and insights
-  const midPoint = Math.floor((revenueChart?.length || 0) / 2);
-  const firstHalf = revenueChart?.slice(0, midPoint) || [];
-  const secondHalf = revenueChart?.slice(midPoint) || [];
-  const firstHalfRevenue = firstHalf.reduce((sum, day) => sum + day.revenue, 0);
-  const secondHalfRevenue = secondHalf.reduce(
-    (sum, day) => sum + day.revenue,
-    0
-  );
-  const growthRate =
-    firstHalfRevenue > 0
-      ? ((secondHalfRevenue - firstHalfRevenue) / firstHalfRevenue) * 100
-      : 0;
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+    }).format(amount);
+  };
 
-  if (!stats || !revenueChart) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
-      </div>
-    );
-  }
+  // Format percentage
+  const formatPercentage = (value: number) => {
+    return `${value.toFixed(2)}%`;
+  };
+
+  // Tabs for different analytics sections
+  const tabs = [
+    { id: "overview", label: "Overview", icon: "📊" },
+    { id: "labor", label: "Labor Costs", icon: "👷" },
+    { id: "vendors", label: "Vendors", icon: "🚚" },
+    { id: "customers", label: "Customer Insights", icon: "👥" },
+    { id: "budget", label: "Budget Planning", icon: "💰" },
+    { id: "orders", label: "Order Management", icon: "📋" },
+    { id: "tables", label: "Table Analysis", icon: "🪑" },
+    { id: "prep", label: "Prep Times", icon: "⏱️" },
+    { id: "busy", label: "Busy Hours", icon: "⏰" },
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-2xl font-bold text-gray-900">
-          Analytics & Reports
-        </h2>
-
-        <div className="flex flex-wrap gap-2">
-          <div className="flex gap-2">
-            {[7, 14, 30, 90].map((days) => (
-              <button
-                key={days}
-                onClick={() => setSelectedPeriod(days)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  selectedPeriod === days
-                    ? "bg-amber-600 text-white"
-                    : "bg-white text-gray-700 border border-gray-300 hover:bg-amber-50"
-                }`}
-              >
-                {days}d
-              </button>
-            ))}
-          </div>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <h2 className="text-2xl font-bold text-gray-900">Business Analytics</h2>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <select
+            value={selectedPeriod}
+            onChange={(e) => setSelectedPeriod(Number(e.target.value))}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+          >
+            <option value={7}>Last 7 days</option>
+            <option value={30}>Last 30 days</option>
+            <option value={90}>Last 90 days</option>
+            <option value={365}>Last year</option>
+          </select>
         </div>
       </div>
 
-      {/* Profit & Loss Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-green-600">
-                ₹{profitLoss.revenue.toLocaleString()}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <span className="text-green-600 text-xl">💰</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">
-                Total Expenses
-              </p>
-              <p className="text-2xl font-bold text-red-600">
-                ₹{profitLoss.expenses.toLocaleString()}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-              <span className="text-red-600 text-xl">💸</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Net Profit</p>
-              <p
-                className={`text-2xl font-bold ${profitLoss.profit >= 0 ? "text-green-600" : "text-red-600"}`}
-              >
-                ₹{profitLoss.profit.toLocaleString()}
-              </p>
-            </div>
-            <div
-              className={`w-12 h-12 rounded-lg flex items-center justify-center ${profitLoss.profit >= 0 ? "bg-green-100" : "bg-red-100"}`}
+      {/* Tab Navigation */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-4 md:space-x-8 overflow-x-auto py-2 scrollbar-hide">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`whitespace-nowrap py-2 px-1 md:py-4 md:px-1 border-b-2 font-medium text-xs md:text-sm transition-all duration-300 transform hover:scale-105 ${
+                activeTab === tab.id
+                  ? "border-amber-500 text-amber-600"
+                  : "border-transparent text-gray-500 hover:text-amber-600 hover:border-gray-300"
+              }`}
             >
-              <span
-                className={`text-xl ${profitLoss.profit >= 0 ? "text-green-600" : "text-red-600"}`}
-              >
-                {profitLoss.profit >= 0 ? "📈" : "📉"}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Profit Margin</p>
-              <p
-                className={`text-2xl font-bold ${profitLoss.margin >= 0 ? "text-green-600" : "text-red-600"}`}
-              >
-                {profitLoss.margin.toFixed(1)}%
-              </p>
-            </div>
-            <div
-              className={`w-12 h-12 rounded-lg flex items-center justify-center ${profitLoss.margin >= 20 ? "bg-green-100" : profitLoss.margin >= 10 ? "bg-yellow-100" : "bg-red-100"}`}
-            >
-              <span
-                className={`text-xl ${profitLoss.margin >= 20 ? "text-green-600" : profitLoss.margin >= 10 ? "text-yellow-600" : "text-red-600"}`}
-              >
-                {profitLoss.margin >= 20
-                  ? "🏆"
-                  : profitLoss.margin >= 10
-                    ? "👍"
-                    : "⚠️"}
-              </span>
-            </div>
-          </div>
-        </div>
+              <span className="mr-1 md:mr-2 text-base md:text-lg">{tab.icon}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
+            </button>
+          ))}
+        </nav>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">
-                {selectedPeriod}-Day Revenue
-              </p>
-              <p className="text-2xl font-bold text-green-600">
-                ₹{totalRevenue.toLocaleString()}
-              </p>
-              <div className="flex items-center mt-1">
-                <span
-                  className={`text-xs font-medium ${growthRate >= 0 ? "text-green-600" : "text-red-600"}`}
-                >
-                  {growthRate >= 0 ? "↗" : "↘"}{" "}
-                  {Math.abs(growthRate).toFixed(1)}%
-                </span>
-                <span className="text-xs text-gray-500 ml-1">
-                  vs previous period
-                </span>
-              </div>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <span className="text-green-600 text-xl">💰</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Orders</p>
-              <p className="text-2xl font-bold text-blue-600">{totalOrders}</p>
-            </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <span className="text-blue-600 text-xl">📋</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">
-                Avg Order Value
-              </p>
-              <p className="text-2xl font-bold text-purple-600">
-                ₹{averageOrderValue.toFixed(0)}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <span className="text-purple-600 text-xl">📊</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">
-                Today's Revenue
-              </p>
-              <p className="text-2xl font-bold text-orange-600">
-                ₹{stats.todayRevenue.toLocaleString()}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <span className="text-orange-600 text-xl">🎯</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ML Predictions */}
-      {predictions && (
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            📈 AI Predictions & Insights
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-2">Revenue Trend</h4>
-              <p className="text-2xl font-bold text-blue-700">
-                {predictions.trend === "increasing"
-                  ? "↗"
-                  : predictions.trend === "decreasing"
-                    ? "↘"
-                    : "→"}{" "}
-                {predictions.trendPercent.toFixed(1)}%
-              </p>
-              <p className="text-sm text-blue-600">
-                Based on {selectedPeriod}-day data
-              </p>
-            </div>
-
-            <div className="bg-purple-50 rounded-lg p-4">
-              <h4 className="font-medium text-purple-900 mb-2">
-                Prediction Confidence
-              </h4>
-              <p className="text-2xl font-bold text-purple-700">
-                {predictions.confidence.toFixed(0)}%
-              </p>
-              <p className="text-sm text-purple-600">
-                Algorithm confidence level
-              </p>
-            </div>
-
-            <div className="bg-amber-50 rounded-lg p-4">
-              <h4 className="font-medium text-amber-900 mb-2">
-                Next 7 Days Forecast
-              </h4>
-              <p className="text-2xl font-bold text-amber-700">
-                ₹
-                {predictions.predictions
-                  .reduce((sum: number, p: any) => sum + p.revenue, 0)
-                  .toLocaleString(undefined, { maximumFractionDigits: 0 })}
-              </p>
-              <p className="text-sm text-amber-600">Projected revenue</p>
-            </div>
-          </div>
-
-          <div className="border-t pt-4">
-            <h4 className="font-medium text-gray-900 mb-3">Forecast Details</h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
-              {predictions.predictions.map((pred: any, index: number) => (
-                <div key={index} className="text-center p-2 bg-gray-50 rounded">
-                  <p className="text-xs text-gray-600">
-                    {new Date(pred.date).toLocaleDateString("en-US", {
-                      weekday: "short",
-                    })}
-                  </p>
-                  <p className="font-medium">
-                    ₹
-                    {pred.revenue.toLocaleString(undefined, {
-                      maximumFractionDigits: 0,
-                    })}
+      {/* Overview Tab */}
+      {activeTab === "overview" && (
+        <div className="space-y-6">
+          {/* Key Metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={() => setActiveTab('sales')}>
+              <div className="flex items-center">
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <span className="text-xl">💰</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs font-medium text-gray-600">Revenue</p>
+                  <p className="text-lg font-bold text-gray-900">
+                    {formatCurrency(profitLoss.revenue)}
                   </p>
                 </div>
-              ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={() => setActiveTab('budget')}>
+              <div className="flex items-center">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <span className="text-xl">✅</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs font-medium text-gray-600">Profit</p>
+                  <p className="text-lg font-bold text-gray-900">
+                    {formatCurrency(profitLoss.profit)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={() => setActiveTab('orders')}>
+              <div className="flex items-center">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <span className="text-xl">📋</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs font-medium text-gray-600">Orders</p>
+                  <p className="text-lg font-bold text-gray-900">
+                    {stats?.todayOrders || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1" onClick={() => setActiveTab('budget')}>
+              <div className="flex items-center">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <span className="text-xl">📈</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs font-medium text-gray-600">Margin</p>
+                  <p className="text-lg font-bold text-gray-900">
+                    {formatPercentage(profitLoss.margin)}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Revenue Trend Chart */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">
-            {selectedPeriod}-Day Revenue Trend
-          </h3>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setRevenueType("revenue")}
-              className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                revenueType === "revenue"
-                  ? "bg-amber-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Revenue
-            </button>
-            <button
-              onClick={() => setRevenueType("orders")}
-              className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                revenueType === "orders"
-                  ? "bg-amber-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Orders
-            </button>
-          </div>
-        </div>
-        <div className="h-80 flex items-end justify-between gap-1">
-          {revenueChart.map((day, index) => {
-            const maxValue =
-              revenueType === "revenue"
-                ? Math.max(...revenueChart.map((d) => d.revenue))
-                : Math.max(...revenueChart.map((d) => d.orders));
-
-            const value = revenueType === "revenue" ? day.revenue : day.orders;
-            const height = maxValue > 0 ? (value / maxValue) * 280 : 0;
-
-            return (
-              <div key={index} className="flex flex-col items-center flex-1">
-                <div className="w-full flex flex-col items-center">
-                  <div
-                    className="w-full bg-gradient-to-t from-amber-500 to-amber-400 rounded-t transition-all duration-300 hover:from-amber-600 hover:to-amber-500 min-w-[8px]"
-                    style={{ height: `${Math.max(height, 2)}px` }}
-                    title={`${day.date}: ${revenueType === "revenue" ? `₹${day.revenue.toLocaleString()}` : `${day.orders} orders`}`}
-                  ></div>
-                  {(selectedPeriod <= 14 ||
-                    index % Math.ceil(selectedPeriod / 14) === 0) && (
-                    <div className="mt-2 text-xs text-gray-600 text-center transform -rotate-45 origin-top-left">
-                      {new Date(day.date).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
+          {/* Revenue Chart */}
+          <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 md:p-6 transition-all duration-300 hover:shadow-md">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Revenue Trend
+              </h3>
+              <div className="flex gap-2">
+                <button 
+                  className={`px-3 py-1 text-xs rounded-full transition-all duration-200 transform hover:scale-105 ${
+                    selectedPeriod === 7 
+                      ? 'bg-amber-500 text-white shadow-md' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  onClick={() => setSelectedPeriod(7)}
+                >
+                  7D
+                </button>
+                <button 
+                  className={`px-3 py-1 text-xs rounded-full transition-all duration-200 transform hover:scale-105 ${
+                    selectedPeriod === 30 
+                      ? 'bg-amber-500 text-white shadow-md' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  onClick={() => setSelectedPeriod(30)}
+                >
+                  30D
+                </button>
+                <button 
+                  className={`px-3 py-1 text-xs rounded-full transition-all duration-200 transform hover:scale-105 ${
+                    selectedPeriod === 90 
+                      ? 'bg-amber-500 text-white shadow-md' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  onClick={() => setSelectedPeriod(90)}
+                >
+                  90D
+                </button>
+              </div>
+            </div>
+            <div className="h-64 md:h-80 overflow-y-auto">
+              {revenueChart ? (
+                <div className="space-y-2">
+                  {revenueChart.map((day, index) => (
+                    <div key={index} className="flex items-center group hover:bg-amber-50 p-1 rounded transition-all duration-200">
+                      <div className="w-20 md:w-24 text-xs md:text-sm text-gray-600 truncate">
+                        {new Date(day.date).toLocaleDateString()}
+                      </div>
+                      <div className="flex-1 ml-2 md:ml-4">
+                        <div className="flex items-center">
+                          <div
+                            className="h-4 md:h-6 bg-gradient-to-r from-amber-400 to-amber-600 rounded transition-all duration-500 group-hover:h-5 md:group-hover:h-7 group-hover:shadow-md"
+                            style={{
+                              width: `${revenueChart && revenueChart.length > 0 && Math.max(...revenueChart.map((d) => d.revenue)) > 0
+                                ? Math.min(
+                                    100,
+                                    (day.revenue / Math.max(...revenueChart.map((d) => d.revenue))) * 100
+                                  )
+                                : 0}%`,
+                            }}
+                          ></div>
+                          <span className="ml-2 text-xs md:text-sm font-medium truncate">
+                            {formatCurrency(day.revenue)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  )}
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="animate-spin rounded-full h-6 w-6 md:h-8 md:w-8 border-b-2 border-amber-600"></div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Labor Costs Tab */}
+      {activeTab === "labor" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+              <div className="flex items-center">
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <span className="text-xl">💰</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs font-medium text-gray-600">
+                    Total Labor Cost
+                  </p>
+                  <p className="text-lg font-bold text-gray-900">
+                    {laborCostAnalysis && laborCostAnalysis.totalLaborCost
+                      ? formatCurrency(laborCostAnalysis.totalLaborCost)
+                      : "₹0"}
+                  </p>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
+            </div>
 
-      {/* Trend Analysis */}
-      {trendData && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              📅 Trend Analysis
-            </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                <span className="text-green-800 font-medium">
-                  Best Performance Day
-                </span>
-                <span className="text-green-600 font-bold">
-                  {new Date(trendData.peakDay.date).toLocaleDateString()}
-                </span>
+            <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+              <div className="flex items-center">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <span className="text-xl">📊</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs font-medium text-gray-600">
+                    Labor Cost Ratio
+                  </p>
+                  <p className="text-lg font-bold text-gray-900">
+                    {laborCostAnalysis && laborCostAnalysis.laborCostRatio
+                      ? formatPercentage(laborCostAnalysis.laborCostRatio)
+                      : "0%"}
+                  </p>
+                </div>
               </div>
-              <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
-                <span className="text-red-800 font-medium">
-                  Lowest Performance Day
-                </span>
-                <span className="text-red-600 font-bold">
-                  {new Date(trendData.lowDay.date).toLocaleDateString()}
-                </span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                <span className="text-blue-800 font-medium">
-                  Best Day of Week
-                </span>
-                <span className="text-blue-600 font-bold">
-                  {trendData.bestDayOfWeek}
-                </span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-                <span className="text-purple-800 font-medium">
-                  Worst Day of Week
-                </span>
-                <span className="text-purple-600 font-bold">
-                  {trendData.worstDayOfWeek}
-                </span>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+              <div className="flex items-center">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <span className="text-xl">👥</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs font-medium text-gray-600">
+                    Staff Tracked
+                  </p>
+                  <p className="text-lg font-bold text-gray-900">
+                    {laborCostAnalysis?.laborCosts?.length || 0}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+          {/* Labor Cost Details */}
+          <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 md:p-6 transition-all duration-300 hover:shadow-md">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              ⏱️ Performance Insights
+              Staff Labor Costs & Productivity
             </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Active Orders</span>
-                <span className="font-semibold text-orange-600">
-                  {stats.activeOrders}
-                </span>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Staff
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Role
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Hours
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Cost
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                      Orders/Hour
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Revenue/Hour
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {laborCostAnalysis?.productivityData && laborCostAnalysis.productivityData.length > 0 ? laborCostAnalysis.productivityData.map((staff: any) => (
+                    <tr key={staff.staffId} className="hover:bg-amber-50 transition-colors duration-200">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {staff.name || 'Unknown'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                          {staff.role || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {staff.totalHours ? staff.totalHours.toFixed(1) : '0.0'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 font-medium">
+                        {formatCurrency(staff.totalCost || 0)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
+                        {staff.ordersPerHour ? staff.ordersPerHour.toFixed(1) : '0.0'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 font-medium">
+                        {formatCurrency(staff.revenuePerHour || 0)}
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-4 text-center text-gray-500">
+                        No labor cost data available
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Vendor Comparison Tab */}
+      {activeTab === "vendors" && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 md:p-6 transition-all duration-300 hover:shadow-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Vendor Comparison
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Vendor
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Items
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total Value
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {vendorAnalysis && vendorAnalysis.length > 0 ? vendorAnalysis.map((vendor: any) => (
+                    <tr key={vendor.supplier} className="hover:bg-amber-50 transition-colors duration-200">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {vendor.supplier || 'Unknown Vendor'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {vendor.totalItems || 0}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 font-medium">
+                        {formatCurrency(vendor.totalValue || 0)}
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-4 text-center text-gray-500">
+                        No vendor data available
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Customer Insights Tab */}
+      {activeTab === "customers" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Popular Items */}
+            <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 md:p-6 transition-all duration-300 hover:shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Popular Items
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Item
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Qty
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Revenue
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {customerInsights?.popularItems && customerInsights.popularItems.length > 0 ? customerInsights.popularItems.slice(0, 10).map((item: any) => (
+                      <tr key={item.itemName} className="hover:bg-amber-50 transition-colors duration-200">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {item.itemName || 'Unknown Item'}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {item.totalQuantity || 0}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 font-medium">
+                          {formatCurrency(item.totalRevenue || 0)}
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td colSpan={3} className="px-4 py-4 text-center text-gray-500">
+                          No popular items data available
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Occupied Tables</span>
-                <span className="font-semibold text-red-600">
-                  {stats.occupiedTables}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Low Stock Items</span>
-                <span className="font-semibold text-yellow-600">
-                  {stats.lowStockItems}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Today's Orders</span>
-                <span className="font-semibold text-blue-600">
-                  {stats.todayOrders}
-                </span>
+            </div>
+
+            {/* Peak Hours */}
+            <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 md:p-6 transition-all duration-300 hover:shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Peak Dining Hours
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Hour
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Orders
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Revenue
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {customerInsights?.peakHours && customerInsights.peakHours.length > 0 ? customerInsights.peakHours.slice(0, 10).map((hour: any) => (
+                      <tr key={hour.hour} className="hover:bg-amber-50 transition-colors duration-200">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {hour.hour}:00 - {hour.hour + 1}:00
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {hour.orderCount || 0}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 font-medium">
+                          {formatCurrency(hour.revenue || 0)}
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td colSpan={3} className="px-4 py-4 text-center text-gray-500">
+                          No peak hours data available
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Top Performing Items */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          🏆 Top Performing Items
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {stats.lowStockItemsList &&
-            stats.lowStockItemsList
-              .slice(0, 5)
-              .map((item: any, index: number) => (
-                <div
-                  key={index}
-                  className="border border-gray-200 rounded-lg p-3 text-center"
-                >
-                  <div className="font-medium text-gray-900">
-                    {item.itemName}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {item.quantity} in stock
-                  </div>
-                  <div className="text-xs text-amber-600 mt-1">
-                    Low stock alert
-                  </div>
-                </div>
-              ))}
+      {/* Budget Planning Tab */}
+      {activeTab === "budget" && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 md:p-6 transition-all duration-300 hover:shadow-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Budget Planning & Historical Data
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Month
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Revenue
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Expenses
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Profit
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {budgetPlanningData && budgetPlanningData.length > 0 ? budgetPlanningData.map((month: any) => (
+                    <tr key={`${month.year}-${month.month}`} className="hover:bg-amber-50 transition-colors duration-200">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {month.monthName || 'Unknown'} {month.year || ''}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 font-medium">
+                        {formatCurrency(month.revenue || 0)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 font-medium">
+                        {formatCurrency(month.expenses || 0)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        <span
+                          className={`font-medium ${
+                            (month.profit || 0) >= 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {formatCurrency(month.profit || 0)}
+                        </span>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-4 text-center text-gray-500">
+                        No budget data available
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Order Management Tab */}
+      {activeTab === "orders" && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 md:p-6 transition-all duration-300 hover:shadow-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Order Prioritization
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Order #
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Table
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Items
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Est. Prep Time
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Priority
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {orderPrioritizationData && orderPrioritizationData.length > 0 ? orderPrioritizationData.map((order: any, index: number) => (
+                    <tr key={order.orderId} className="hover:bg-amber-50 transition-colors duration-200">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {order.orderNumber || 'Unknown'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {order.tableInfo
+                          ? `Table ${order.tableInfo.tableNumber || 'N/A'}`
+                          : "N/A"}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {order.itemCount || 0}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {(order.totalPrepTime || 0).toFixed(1)} mins
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            index < 3
+                              ? "bg-red-100 text-red-800"
+                              : index < 6
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-green-100 text-green-800"
+                          }`}
+                        >
+                          {index < 3
+                            ? "High"
+                            : index < 6
+                            ? "Medium"
+                            : "Low"}
+                        </span>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-4 text-center text-gray-500">
+                        No orders data available
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Table Analysis Tab */}
+      {activeTab === "tables" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+              <div className="flex items-center">
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <span className="text-xl">🪑</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs font-medium text-gray-600">
+                    Total Completed Orders
+                  </p>
+                  <p className="text-lg font-bold text-gray-900">
+                    {tableTurnaroundAnalysis?.totalCompletedOrders || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+              <div className="flex items-center">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <span className="text-xl">⏱️</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs font-medium text-gray-600">
+                    Avg. Turnaround Time
+                  </p>
+                  <p className="text-lg font-bold text-gray-900">
+                    {tableTurnaroundAnalysis
+                      ? `${tableTurnaroundAnalysis.avgOverallTurnaround.toFixed(1)} mins`
+                      : "0 mins"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 md:p-6 transition-all duration-300 hover:shadow-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Table Turnaround Analysis
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Table
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Capacity
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Completed Orders
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Avg. Turnaround
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {tableTurnaroundAnalysis?.tableData && tableTurnaroundAnalysis.tableData.length > 0 ? tableTurnaroundAnalysis.tableData.map((table: any) => (
+                    <tr key={table.tableId} className="hover:bg-amber-50 transition-colors duration-200">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                        Table {table.tableNumber || 'N/A'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {table.capacity || 0}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {table.completedOrders || 0}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {(table.avgTurnaroundTime || 0).toFixed(1)} mins
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-4 text-center text-gray-500">
+                        No table data available
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preparation Times Tab */}
+      {activeTab === "prep" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 md:p-6 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+              <div className="flex items-center">
+                <div className="p-3 bg-amber-100 rounded-lg">
+                  <span className="text-2xl">⏱️</span>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">
+                    Overall Avg. Prep Time
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {preparationTimeAnalysis
+                      ? `${preparationTimeAnalysis.overallAvgPrepTime.toFixed(1)} mins`
+                      : "0 mins"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 md:p-6 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+              <div className="flex items-center">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <span className="text-2xl">🍽️</span>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">
+                    Total Items Prepared
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {preparationTimeAnalysis?.totalItems || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 md:p-6 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+              <div className="flex items-center">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <span className="text-2xl">📋</span>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">
+                    Items Tracked
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {preparationTimeAnalysis?.prepTimeData?.length || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 md:p-6 transition-all duration-300 hover:shadow-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Preparation Time Analysis
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Item
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Items Prepared
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total Prep Time
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Avg. Prep Time
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {preparationTimeAnalysis?.prepTimeData && preparationTimeAnalysis.prepTimeData.length > 0 ? preparationTimeAnalysis.prepTimeData.map((item: any) => (
+                    <tr key={item.itemName} className="hover:bg-amber-50 transition-colors duration-200">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {item.itemName || 'Unknown Item'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {item.itemCount || 0}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {(item.totalPrepTime || 0).toFixed(1)} mins
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        <span
+                          className={
+                            (item.avgPrepTime || 0) > 20
+                              ? "text-red-600 font-bold"
+                              : (item.avgPrepTime || 0) > 15
+                              ? "text-amber-600 font-medium"
+                              : "text-green-600"
+                          }
+                        >
+                          {(item.avgPrepTime || 0).toFixed(1)} mins
+                        </span>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-4 text-center text-gray-500">
+                        No preparation time data available
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Busy Hours Tab */}
+      {activeTab === "busy" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Peak Hours */}
+            <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 md:p-6 transition-all duration-300 hover:shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Peak Hours
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Hour
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Orders
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Revenue
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Avg. Order Value
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {busyHourAnalysis?.peakHours && busyHourAnalysis.peakHours.length > 0 ? busyHourAnalysis.peakHours.map((hour: any) => (
+                      <tr key={hour.hour} className="hover:bg-amber-50 transition-colors duration-200">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {hour.hour}:00 - {hour.hour + 1}:00
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {hour.orderCount || 0}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {formatCurrency(hour.revenue || 0)}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {formatCurrency(hour.avgOrderValue || 0)}
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-4 text-center text-gray-500">
+                          No peak hours data available
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Slow Hours */}
+            <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 md:p-6 transition-all duration-300 hover:shadow-md">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Slow Hours
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Hour
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Orders
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Revenue
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Avg. Order Value
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {busyHourAnalysis?.slowHours && busyHourAnalysis.slowHours.length > 0 ? busyHourAnalysis.slowHours.map((hour: any) => (
+                      <tr key={hour.hour} className="hover:bg-amber-50 transition-colors duration-200">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {hour.hour}:00 - {hour.hour + 1}:00
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {hour.orderCount || 0}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {formatCurrency(hour.revenue || 0)}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {formatCurrency(hour.avgOrderValue || 0)}
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-4 text-center text-gray-500">
+                          No slow hours data available
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* Full Hourly Analysis */}
+          <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 md:p-6 transition-all duration-300 hover:shadow-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Complete Hourly Analysis
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Hour
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Orders
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Revenue
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Avg. Order Value
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {busyHourAnalysis?.hourlyData && busyHourAnalysis.hourlyData.length > 0 ? busyHourAnalysis.hourlyData.map((hour: any) => (
+                    <tr key={hour.hour} className="hover:bg-amber-50 transition-colors duration-200">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {hour.hour}:00 - {hour.hour + 1}:00
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {hour.orderCount || 0}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {formatCurrency(hour.revenue || 0)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {formatCurrency(hour.avgOrderValue || 0)}
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-4 text-center text-gray-500">
+                        No hourly data available
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

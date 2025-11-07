@@ -5,7 +5,7 @@ import path from "path";
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: true, // Allow external connections
+    host: '0.0.0.0', // Allow external connections
     port: 5173, // Use the default port
   },
   plugins: [

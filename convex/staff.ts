@@ -16,6 +16,7 @@ export const getStaffByRole = query({
       v.literal("cashier"),
       v.literal("waiter"),
       v.literal("kitchen")
+      // Removed delivery role
     ),
   },
   handler: async (ctx, args) => {
@@ -48,9 +49,11 @@ export const addStaff = mutation({
       v.literal("cashier"),
       v.literal("waiter"),
       v.literal("kitchen")
+      // Removed delivery role
     ),
     pin: v.optional(v.string()),
     monthlySalary: v.optional(v.number()),
+    // Removed vehicleType and licensePlate fields
   },
   handler: async (ctx, args) => {
     // Check authentication - only managers can add staff
@@ -86,7 +89,12 @@ export const addStaff = mutation({
 
     // Create the staff record
     const staffId = await ctx.db.insert("staff", {
-      ...args,
+      name: args.name,
+      email: args.email,
+      role: args.role,
+      pin: args.pin,
+      monthlySalary: args.monthlySalary,
+      // Removed vehicleType and licensePlate fields
       isActive: true,
       joinDate: Date.now(),
     });
@@ -106,10 +114,12 @@ export const updateStaff = mutation({
         v.literal("cashier"),
         v.literal("waiter"),
         v.literal("kitchen")
+        // Removed delivery role
       )
     ),
     pin: v.optional(v.string()),
     monthlySalary: v.optional(v.number()),
+    // Removed vehicleType and licensePlate fields
     isActive: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {

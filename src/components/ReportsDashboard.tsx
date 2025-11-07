@@ -94,12 +94,12 @@ export function ReportsDashboard() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-amber-100">
+      <div className="bg-white rounded-xl shadow-sm border border-amber-100 transition-all duration-300 hover:shadow-md">
         <ReportsNavigation
           activeReport={activeReport}
           setActiveReport={setActiveReport}
         />
-        <div className="p-6">{renderActiveReport()}</div>
+        <div className="p-4 md:p-6">{renderActiveReport()}</div>
       </div>
     </div>
   );

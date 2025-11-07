@@ -6,7 +6,7 @@
   "main": "electron-main.cjs",
   "scripts": {
     "dev": "npm-run-all --parallel dev:frontend dev:backend",
-    "dev:frontend": "vite --open",
+    "dev:frontend": "vite --host",
     "dev:backend": "convex dev",
     "build": "vite build",
     "lint": "tsc -p convex -noEmit --pretty false && tsc -p . -noEmit --pretty false && convex dev --once && vite build",
@@ -17,7 +17,14 @@
     "db:backup:info": "node scripts/backup-info.cjs",
     "db:backup:scheduled": "node scripts/scheduled-backup.cjs",
     "db:create-sample-sales": "node scripts/create-sample-sales.cjs",
-    "test:app": "node scripts/test-app.mjs"
+    "test:app": "node scripts/test-app.mjs",
+    "deploy:setup": "npx @convex-dev/auth",
+    "deploy": "npx convex deploy",
+    "deploy:prod": "npx convex deploy --prod",
+    "export:data": "npx convex export --file=backup.zip",
+    "import:data": "npx convex import backup.zip",
+    "migrate:data": "node scripts/migrate-client-data.cjs",
+    "show-ip": "powershell -ExecutionPolicy Bypass -File scripts/get_local_ip.ps1"
   },
   "dependencies": {
     "@convex-dev/auth": "^0.0.80",

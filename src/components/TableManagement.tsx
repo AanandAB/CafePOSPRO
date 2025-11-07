@@ -88,14 +88,8 @@ export function TableManagement() {
       )
     ) {
       try {
-        // Clear table orders
+        // Clear table orders and update table status to available
         await clearTableOrders({ tableId: tableId as any });
-
-        // Mark table as available
-        await updateTableStatus({
-          tableId: tableId as any,
-          status: "available",
-        });
 
         toast.success(
           `Table ${tableNumber} has been cleared and is now available.`

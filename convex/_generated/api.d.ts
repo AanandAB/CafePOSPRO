@@ -24,6 +24,7 @@ import type * as seed from "../seed.js";
 import type * as staff from "../staff.js";
 import type * as tables from "../tables.js";
 import type * as test from "../test.js";
+import type * as testImports from "../testImports.js";
 import type * as tips from "../tips.js";
 
 import type {
@@ -57,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   staff: typeof staff;
   tables: typeof tables;
   test: typeof test;
+  testImports: typeof testImports;
   tips: typeof tips;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

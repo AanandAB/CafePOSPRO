@@ -126,9 +126,9 @@ export function SalesReport({
               <button
                 key={days}
                 onClick={() => applyQuickFilter(days)}
-                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-all duration-300 transform hover:scale-105 ${
                   quickFilter === days
-                    ? "bg-amber-600 text-white"
+                    ? "bg-amber-600 text-white shadow-md"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
@@ -147,7 +147,7 @@ export function SalesReport({
                 const date = e.target.value ? new Date(e.target.value) : null;
                 onDateChange(date, dateRange.end);
               }}
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
+              className="px-3 py-1 border border-gray-300 rounded-lg text-sm transition-all duration-200 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
             />
             <span className="flex items-center text-gray-500">to</span>
             <input
@@ -157,15 +157,15 @@ export function SalesReport({
                 const date = e.target.value ? new Date(e.target.value) : null;
                 onDateChange(dateRange.start, date);
               }}
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
+              className="px-3 py-1 border border-gray-300 rounded-lg text-sm transition-all duration-200 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
             />
           </div>
         </div>
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-4 text-white">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-4 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
           <h4 className="text-sm font-medium opacity-90">Total Revenue</h4>
           <p className="text-2xl font-bold">
             ₹
@@ -176,12 +176,12 @@ export function SalesReport({
           </p>
         </div>
 
-        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl p-4 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
           <h4 className="text-sm font-medium opacity-90">Total Orders</h4>
           <p className="text-2xl font-bold">{totalOrders}</p>
         </div>
 
-        <div className="bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-xl p-4 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
           <h4 className="text-sm font-medium opacity-90">Avg Order Value</h4>
           <p className="text-2xl font-bold">
             ₹
@@ -192,16 +192,16 @@ export function SalesReport({
           </p>
         </div>
 
-        <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
           <h4 className="text-sm font-medium opacity-90">Conversion Rate</h4>
           <p className="text-2xl font-bold">{totalOrders > 0 ? "85%" : "0%"}</p>
         </div>
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Revenue Trend */}
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-xl p-4 border border-gray-200 transition-all duration-300 hover:shadow-md">
           <h4 className="font-semibold text-gray-900 mb-4">Revenue Trend</h4>
           <div className="h-64 flex items-end justify-between gap-1">
             {dailySalesArray.slice(-30).map((day, index) => {
@@ -212,9 +212,9 @@ export function SalesReport({
 
               return (
                 <div key={index} className="flex flex-col items-center flex-1">
-                  <div className="w-full flex flex-col items-center">
+                  <div className="w-full flex flex-col items-center group">
                     <div
-                      className="w-full bg-gradient-to-t from-amber-500 to-amber-400 rounded-t transition-all duration-300 min-w-[4px]"
+                      className="w-full bg-gradient-to-t from-amber-500 to-amber-400 rounded-t transition-all duration-500 min-w-[4px] group-hover:from-amber-600 group-hover:to-amber-500 group-hover:shadow-md"
                       style={{ height: `${Math.max(height, 2)}px` }}
                       title={`${day.date}: ₹${day.revenue.toFixed(2)}`}
                     ></div>
@@ -231,7 +231,7 @@ export function SalesReport({
         </div>
 
         {/* Payment Methods */}
-        <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <div className="bg-white rounded-xl p-4 border border-gray-200 transition-all duration-300 hover:shadow-md">
           <h4 className="font-semibold text-gray-900 mb-4">Payment Methods</h4>
           <div className="space-y-3">
             {Object.entries(paymentModeBreakdown).map(([mode, amount]) => {
@@ -253,7 +253,7 @@ export function SalesReport({
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
-                      className="bg-amber-500 h-2 rounded-full"
+                      className="bg-amber-500 h-2 rounded-full transition-all duration-500"
                       style={{ width: `${percentage}%` }}
                     ></div>
                   </div>
@@ -265,11 +265,11 @@ export function SalesReport({
       </div>
 
       {/* Top Selling Items */}
-      <div className="bg-white rounded-xl p-4 border border-gray-200">
+      <div className="bg-white rounded-xl p-4 border border-gray-200 transition-all duration-300 hover:shadow-md">
         <h4 className="font-semibold text-gray-900 mb-4">Top Selling Items</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {filteredSales.slice(0, 6).map((sale, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-3">
+            <div key={index} className="border border-gray-200 rounded-lg p-3 transition-all duration-200 hover:bg-amber-50 hover:shadow-sm">
               <div className="font-medium text-gray-900 truncate">
                 {sale.items.split(";")[0]}
               </div>
@@ -286,7 +286,7 @@ export function SalesReport({
       </div>
 
       {/* Sales Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-md">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
@@ -312,7 +312,7 @@ export function SalesReport({
               {filteredSales.slice(0, 10).map((sale, index) => (
                 <tr
                   key={index}
-                  className="border-b border-gray-100 hover:bg-gray-50"
+                  className="border-b border-gray-100 hover:bg-amber-50 transition-colors duration-200"
                 >
                   <td className="py-3 px-4 font-medium text-gray-900">
                     {sale.orderNumber}
@@ -330,7 +330,7 @@ export function SalesReport({
                       : ""}
                   </td>
                   <td className="py-3 px-4">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium capitalize">
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium capitalize transition-colors duration-200">
                       {sale.paymentMode || "Unknown"}
                     </span>
                   </td>

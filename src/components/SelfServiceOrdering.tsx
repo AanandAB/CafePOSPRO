@@ -135,7 +135,8 @@ export function SelfServiceOrdering({ tableId }: { tableId: string }) {
   // Load existing orders for this table and check for status changes
   useEffect(() => {
     if (existingOrders && existingOrders.length > 0) {
-      setTableOrders(existingOrders);
+      // Type assertion to ensure compatibility with Order interface
+      setTableOrders(existingOrders as unknown as Order[]);
 
       // Filter orders that belong to the current customer
       const customerOrders = existingOrders.filter(
@@ -143,8 +144,8 @@ export function SelfServiceOrdering({ tableId }: { tableId: string }) {
       );
 
       // Check for status changes to show notifications for customer's own orders
-      customerOrders.forEach((order: Order) => {
-        order.items.forEach((item) => {
+      customerOrders.forEach((order: any) => {
+        order.items.forEach((item: any) => {
           const key = `${order._id}-${item.itemName}`;
           const previousStatus = previousOrderItems[key];
 
@@ -357,14 +358,8 @@ export function SelfServiceOrdering({ tableId }: { tableId: string }) {
       )
     ) {
       try {
-        // Clear table orders
+        // Clear table orders and update table status to available
         await clearTableOrders({ tableId: tableId as Id<"tables"> });
-
-        // Mark table as available
-        await updateTableStatus({
-          tableId: tableId as Id<"tables">,
-          status: "available",
-        });
 
         // Reset the customer session to show name form again
         setShowNameForm(true);

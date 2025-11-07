@@ -110,7 +110,7 @@ export function InventoryReport({
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
+              className="px-3 py-1 border border-gray-300 rounded-lg text-sm transition-all duration-200 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
             >
               <option value="all">All Categories</option>
               {categories.map((category) => (
@@ -123,7 +123,7 @@ export function InventoryReport({
             <select
               value={stockFilter}
               onChange={(e) => setStockFilter(e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
+              className="px-3 py-1 border border-gray-300 rounded-lg text-sm transition-all duration-200 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
             >
               <option value="all">All Stock Levels</option>
               <option value="low">Low Stock</option>
@@ -135,23 +135,23 @@ export function InventoryReport({
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl p-4 text-white">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl p-4 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
           <h4 className="text-sm font-medium opacity-90">Total Items</h4>
           <p className="text-2xl font-bold">{totalItems}</p>
         </div>
 
-        <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
           <h4 className="text-sm font-medium opacity-90">Low Stock Items</h4>
           <p className="text-2xl font-bold">{lowStockItems}</p>
         </div>
 
-        <div className="bg-gradient-to-r from-red-500 to-rose-500 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-r from-red-500 to-rose-500 rounded-xl p-4 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
           <h4 className="text-sm font-medium opacity-90">Out of Stock</h4>
           <p className="text-2xl font-bold">{outOfStockItems}</p>
         </div>
 
-        <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-4 text-white">
+        <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-4 text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
           <h4 className="text-sm font-medium opacity-90">Total Value</h4>
           <p className="text-2xl font-bold">
             ₹
@@ -164,12 +164,12 @@ export function InventoryReport({
       </div>
 
       {/* Stock Level Distribution */}
-      <div className="bg-white rounded-xl p-4 border border-gray-200">
+      <div className="bg-white rounded-xl p-4 border border-gray-200 transition-all duration-300 hover:shadow-md">
         <h4 className="font-semibold text-gray-900 mb-4">
           Stock Level Distribution
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="border border-gray-200 rounded-lg p-4">
+          <div className="border border-gray-200 rounded-lg p-4 transition-all duration-200 hover:bg-green-50">
             <h5 className="font-medium text-green-700 mb-2">Adequate Stock</h5>
             <p className="text-2xl font-bold text-green-600">
               {
@@ -181,7 +181,7 @@ export function InventoryReport({
             <p className="text-sm text-gray-600">Items with sufficient stock</p>
           </div>
 
-          <div className="border border-gray-200 rounded-lg p-4">
+          <div className="border border-gray-200 rounded-lg p-4 transition-all duration-200 hover:bg-amber-50">
             <h5 className="font-medium text-amber-700 mb-2">Low Stock</h5>
             <p className="text-2xl font-bold text-amber-600">
               {
@@ -194,7 +194,7 @@ export function InventoryReport({
             <p className="text-sm text-gray-600">Items needing replenishment</p>
           </div>
 
-          <div className="border border-gray-200 rounded-lg p-4">
+          <div className="border border-gray-200 rounded-lg p-4 transition-all duration-200 hover:bg-red-50">
             <h5 className="font-medium text-red-700 mb-2">Out of Stock</h5>
             <p className="text-2xl font-bold text-red-600">
               {inventory.filter((item) => item.quantity === 0).length}
@@ -205,7 +205,7 @@ export function InventoryReport({
       </div>
 
       {/* Category Breakdown */}
-      <div className="bg-white rounded-xl p-4 border border-gray-200">
+      <div className="bg-white rounded-xl p-4 border border-gray-200 transition-all duration-300 hover:shadow-md">
         <h4 className="font-semibold text-gray-900 mb-4">Category Breakdown</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {categories.map((category) => {
@@ -223,7 +223,7 @@ export function InventoryReport({
             return (
               <div
                 key={category}
-                className="border border-gray-200 rounded-lg p-3"
+                className="border border-gray-200 rounded-lg p-3 transition-all duration-200 hover:bg-amber-50 hover:shadow-sm"
               >
                 <h5 className="font-medium text-gray-900">{category}</h5>
                 <div className="mt-2 space-y-1">
@@ -255,7 +255,7 @@ export function InventoryReport({
       </div>
 
       {/* Inventory Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-md">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
@@ -297,7 +297,7 @@ export function InventoryReport({
                 return (
                   <tr
                     key={index}
-                    className="border-b border-gray-100 hover:bg-gray-50"
+                    className="border-b border-gray-100 hover:bg-amber-50 transition-colors duration-200"
                   >
                     <td className="py-3 px-4 font-medium text-gray-900">
                       {item.itemName}
@@ -327,7 +327,7 @@ export function InventoryReport({
                     </td>
                     <td className="py-3 px-4">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass} transition-colors duration-200`}
                       >
                         {status}
                       </span>

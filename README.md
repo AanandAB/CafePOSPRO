@@ -55,6 +55,20 @@ Chef apps use [Convex Auth](https://auth.convex.dev/) with Staff PIN login for e
 - Real-time logs and network address display
 - One-click backup creation
 
+### Advanced Analytics & Reporting
+
+- Comprehensive business intelligence features
+- Labor cost management with staff productivity tracking
+- Food cost monitoring with item-level analysis
+- Waste tracking with cost calculations
+- Vendor comparison with value analysis
+- Customer insights with popular items and peak hours
+- Budget planning with historical data
+- Order prioritization with preparation time estimates
+- Table turnaround analysis
+- Preparation time tracking by item
+- Busy hour management with revenue analysis
+
 ## Data Backup and Management
 
 ### Built-in Backup System
@@ -107,6 +121,34 @@ CafePOSPro includes a comprehensive backup system to protect your business data:
 1. Export and archive old data
 2. Compress images before upload
 3. Upgrade to paid plan ($19/month for 10GB)
+
+## Client Deployment
+
+For deploying this application to a client's Convex account, please refer to the detailed [Client Deployment Guide](CLIENT_DEPLOYMENT.md).
+
+### Quick Deployment Steps:
+
+1. Have the client create a Convex account at https://dashboard.convex.dev
+2. Create a new project in the Convex dashboard
+3. Update the `convex.json` file with the client's deployment name
+4. Run the client setup script: `node scripts/client-setup.cjs`
+5. Deploy to the client's Convex account: `npm run deploy`
+
+### Deployment Scripts:
+
+- `npm run deploy:setup` - Configure authentication for deployment
+- `npm run deploy` - Deploy to Convex staging environment
+- `npm run deploy:prod` - Deploy to Convex production environment
+- `npm run export:data` - Export all data to a backup file
+- `npm run import:data` - Import data from a backup file
+
+## Network Configuration
+
+To get the correct IP address for accessing the app on your local network:
+
+1. Run `npm run show-ip` to display your local IP address
+2. Or double-click the `scripts/show_ip.bat` file
+3. Use the displayed IP address with port 5173 to access the app from other devices on the same network (e.g., http://192.168.1.10:5173)
 
 ## Developing and deploying your app
 

@@ -174,7 +174,6 @@ export const createOrder = mutation({
     const tipAmount = args.tipAmount || 0; // Get tip amount
     const finalAmount = subtotal + tax + tipAmount;
 
-    // Only include waiterId in the order if it's a valid staff ID
     const orderData: any = {
       orderNumber,
       tableId: args.tableId,
@@ -187,7 +186,7 @@ export const createOrder = mutation({
       tax,
       tip: tipAmount, // Store tip amount in order
       finalAmount,
-      status: "active",
+      status: "active", // Set status to active
       paymentStatus: "pending",
       notes: args.notes,
     };
@@ -346,11 +345,10 @@ export const clearTableOrders = mutation({
     tableId: v.id("tables"),
   },
   handler: async (ctx, args) => {
-    // Get all active orders for this table
+    // Get all orders for this table (regardless of status)
     const orders = await ctx.db
       .query("orders")
       .withIndex("by_table", (q) => q.eq("tableId", args.tableId))
-      .filter((q) => q.eq(q.field("status"), "active"))
       .collect();
 
     // Mark all orders as cancelled
@@ -360,9 +358,10 @@ export const clearTableOrders = mutation({
       });
     }
 
-    // Clear the current order ID from the table
+    // Clear the current order ID from the table and mark as available
     await ctx.db.patch(args.tableId, {
       currentOrderId: undefined,
+      status: "available",
     });
 
     return { success: true, cancelledOrders: orders.length };

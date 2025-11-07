@@ -1,4 +1,71 @@
 /**
+ * Utility functions for network operations
+ */
+
+/**
+ * Get the local IP address of the current device
+ * @returns Promise<string> The local IP address
+ */
+export async function getLocalIPAddress(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    // Create a temporary connection to determine the local IP
+    const socket = new WebSocket('wss://echo.websocket.org');
+    
+    socket.onopen = () => {
+      // Get the local IP from the connection
+      const socketObj = socket as any;
+      if (socketObj.url) {
+        // For browsers, we need to use a different approach
+        // This is a fallback method for browsers
+        try {
+          // Create a WebRTC connection to determine local IP
+          const pc = new RTCPeerConnection({
+            iceServers: []
+          });
+          
+          pc.createDataChannel('');
+          pc.createOffer()
+            .then(offer => pc.setLocalDescription(offer))
+            .catch(reject);
+            
+          pc.onicecandidate = (ice) => {
+            if (!ice || !ice.candidate || !ice.candidate.candidate) return;
+            const myIP = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/.exec(ice.candidate.candidate)?.[1];
+            if (myIP) {
+              resolve(myIP);
+              pc.close();
+            }
+          };
+        } catch (error) {
+          // Fallback to localhost
+          resolve('127.0.0.1');
+        }
+      }
+      socket.close();
+    };
+    
+    socket.onerror = () => {
+      // Fallback method
+      resolve('127.0.0.1');
+    };
+  });
+}
+
+/**
+ * Get network information including local and public IPs
+ * @returns Promise<{localIP: string, publicIP?: string}>
+ */
+export async function getNetworkInfo(): Promise<{localIP: string, publicIP?: string}> {
+  try {
+    const localIP = await getLocalIPAddress();
+    return { localIP };
+  } catch (error) {
+    console.error('Error getting network info:', error);
+    return { localIP: '127.0.0.1' };
+  }
+}
+
+/**
  * Check if the application is running in a production environment
  * @returns boolean indicating if app is in production
  */
