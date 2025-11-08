@@ -18,6 +18,7 @@ export function POSSystem() {
   const createOrder = useMutation(api.orders.createOrder);
   const staffDetails = useQuery(api.auth.getStaffDetails);
   const { staff: staffAuth } = useStaffAuth();
+  const restaurantProfile = useQuery(api.restaurant.getRestaurantProfile); // Add restaurant profile
 
   // Get the actual staff details (either from Convex Auth for managers or custom auth for staff)
   const actualStaffDetails = staffDetails || staffAuth;
@@ -129,8 +130,12 @@ export function POSSystem() {
   const systemSettings = JSON.parse(localStorage.getItem("systemSettings") || "{}");
   
   const subtotal = selectedItems.reduce((sum, item) => sum + item.total, 0);
-  const enableGST = systemSettings.enableGST !== false; // Default to true if not set
-  const tax = enableGST ? subtotal * 0.18 : 0;
+  
+  // Calculate tax based on restaurant profile VAT settings
+  const enableVAT = restaurantProfile?.enableVAT !== false; // Default to true
+  const vatRate = restaurantProfile?.vatRate || 5; // Default to 5% (UAE rate)
+  const tax = enableVAT ? subtotal * (vatRate / 100) : 0;
+  
   const finalAmount = subtotal + tax - discount;
 
   const handleCreateOrder = async () => {
@@ -175,16 +180,11 @@ export function POSSystem() {
       }
       // For managers, we don't pass a waiterId since they're not staff members
 
-      // Load system settings to pass GST setting
-      const systemSettings = JSON.parse(localStorage.getItem("systemSettings") || "{}");
-      const enableGST = systemSettings.enableGST !== false; // Default to true if not set
-
       await createOrder({
         tableId: selectedTable ? (selectedTable as any) : undefined,
         items: orderItems,
         waiterId: waiterId, // This will be undefined for managers
         notes: customerName ? `Customer: ${customerName}` : undefined,
-        enableGST, // Pass GST setting to backend
       });
 
       // Reset form
@@ -318,7 +318,7 @@ export function POSSystem() {
                   <h3 className="font-semibold text-gray-900 text-sm mb-1 truncate">
                     {item.itemName}
                   </h3>
-                  <p className="text-amber-600 font-bold text-sm">₹{item.unitPrice}</p>
+                  <p className="text-amber-600 font-bold text-sm">{restaurantProfile?.currency || "₹"}{item.unitPrice}</p>
                   <p
                     className={`text-xs mt-1 ${
                       item.quantity <= item.lowStockThreshold
@@ -399,7 +399,7 @@ export function POSSystem() {
                         {item.itemName}
                       </h4>
                       <p className="text-xs text-gray-600">
-                        ₹{item.unitPrice} × {item.quantity}
+                        {restaurantProfile?.currency || "₹"}{item.unitPrice} × {item.quantity}
                       </p>
                     </div>
                     <div className="flex items-center gap-1 mx-1">
@@ -425,7 +425,7 @@ export function POSSystem() {
                     </div>
                     <div className="ml-1 text-right">
                       <p className="font-semibold text-gray-900 text-sm">
-                        ₹{item.total.toFixed(2)}
+                        {restaurantProfile?.currency || "₹"}{item.total.toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -438,12 +438,9 @@ export function POSSystem() {
               <div className="space-y-1.5 border-t pt-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-medium">₹{subtotal.toFixed(2)}</span>
+                  <span className="font-medium">{restaurantProfile?.currency || "₹"}{subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (18%):</span>
-                  <span className="font-medium">₹{tax.toFixed(2)}</span>
-                </div>
+
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Discount:</span>
                   <input
@@ -457,7 +454,7 @@ export function POSSystem() {
                 </div>
                 <div className="flex justify-between font-bold border-t pt-1.5 text-base">
                   <span>Total:</span>
-                  <span>₹{finalAmount.toFixed(2)}</span>
+                  <span>{restaurantProfile?.currency || "₹"}{finalAmount.toFixed(2)}</span>
                 </div>
               </div>
             )}
@@ -515,12 +512,12 @@ export function POSSystem() {
                       {item.itemName}
                     </h4>
                     <p className="text-xs text-gray-600">
-                      ₹{item.unitPrice} × {item.quantity}
+                      {restaurantProfile?.currency || "₹"}{item.unitPrice} × {item.quantity}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-gray-900 text-sm">
-                      ₹{item.total.toFixed(2)}
+                      {restaurantProfile?.currency || "₹"}{item.total.toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -531,15 +528,12 @@ export function POSSystem() {
             <div className="space-y-1 border-t pt-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal:</span>
-                <span className="font-medium">₹{subtotal.toFixed(2)}</span>
+                <span className="font-medium">{restaurantProfile?.currency || "₹"}{subtotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Tax (18%):</span>
-                <span className="font-medium">₹{tax.toFixed(2)}</span>
-              </div>
+              
               <div className="flex justify-between font-bold border-t pt-1.5 text-base">
                 <span>Total:</span>
-                <span>₹{finalAmount.toFixed(2)}</span>
+                <span>{restaurantProfile?.currency || "₹"}{finalAmount.toFixed(2)}</span>
               </div>
             </div>
 

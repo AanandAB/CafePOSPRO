@@ -23,9 +23,7 @@ export function Settings() {
   const [restaurantData, setRestaurantData] = useState({
     name: "",
     address: "",
-    gstNumber: "",
-    upiId: "",
-    currency: "₹",
+    currency: "$",
     theme: "coffee",
   });
 
@@ -35,8 +33,6 @@ export function Settings() {
       setRestaurantData({
         name: restaurantProfile.name || "",
         address: restaurantProfile.address || "",
-        gstNumber: restaurantProfile.gstNumber || "",
-        upiId: restaurantProfile.upiId || "",
         currency: restaurantProfile.currency || "₹",
         theme: restaurantProfile.theme || "coffee",
       });
@@ -184,7 +180,8 @@ export function Settings() {
     printBillsAutomatically: false,
     notificationSound: true,
     lowStockAlerts: true,
-    enableGST: true, // Add GST toggle
+    enableVAT: true, // Enable VAT by default
+    vatRate: 5, // Default UAE VAT rate
   });
 
   // Load system settings from localStorage
@@ -192,18 +189,62 @@ export function Settings() {
     const savedSettings = localStorage.getItem("systemSettings");
     if (savedSettings) {
       try {
-        setSystemSettings(JSON.parse(savedSettings));
+        const parsedSettings = JSON.parse(savedSettings);
+        setSystemSettings(parsedSettings);
+        
+        // Also update restaurant profile with VAT settings if they exist
+        if (parsedSettings.enableVAT !== undefined || parsedSettings.vatRate !== undefined) {
+          const updateData: any = {};
+          if (parsedSettings.enableVAT !== undefined) {
+            updateData.enableVAT = parsedSettings.enableVAT;
+          }
+          if (parsedSettings.vatRate !== undefined) {
+            updateData.vatRate = parsedSettings.vatRate;
+          }
+          
+          // Update restaurant profile with VAT settings
+          if (restaurantProfile) {
+            updateRestaurant({
+              ...restaurantProfile,
+              ...updateData,
+            }).catch((error) => {
+              console.error("Failed to update restaurant profile with VAT settings:", error);
+            });
+          }
+        }
       } catch (e) {
         console.error("Failed to parse system settings", e);
       }
     }
-  }, []);
+  }, [restaurantProfile]);
 
-  // Save system settings to localStorage
+  // Save system settings to localStorage and restaurant profile
   const saveSystemSettings = (settings: any) => {
     try {
       localStorage.setItem("systemSettings", JSON.stringify(settings));
       setSystemSettings(settings);
+      
+      // Also update restaurant profile with VAT settings
+      if (settings.enableVAT !== undefined || settings.vatRate !== undefined) {
+        const updateData: any = {};
+        if (settings.enableVAT !== undefined) {
+          updateData.enableVAT = settings.enableVAT;
+        }
+        if (settings.vatRate !== undefined) {
+          updateData.vatRate = settings.vatRate;
+        }
+        
+        if (restaurantProfile) {
+          updateRestaurant({
+            ...restaurantProfile,
+            ...updateData,
+          }).catch((error) => {
+            console.error("Failed to update restaurant profile with VAT settings:", error);
+            toast.error("Failed to save VAT settings to restaurant profile");
+          });
+        }
+      }
+      
       toast.success("System settings saved successfully");
     } catch (e) {
       toast.error("Failed to save system settings");
@@ -286,10 +327,10 @@ export function Settings() {
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 >
-                  <option value="₹">₹ (Indian Rupee)</option>
                   <option value="$">$ (US Dollar)</option>
                   <option value="€">€ (Euro)</option>
                   <option value="£">£ (British Pound)</option>
+                  <option value="₹">₹ (Indian Rupee)</option>
                 </select>
               </div>
             </div>
@@ -313,41 +354,9 @@ export function Settings() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  GST Number
-                </label>
-                <input
-                  type="text"
-                  value={restaurantData.gstNumber}
-                  onChange={(e) =>
-                    setRestaurantData({
-                      ...restaurantData,
-                      gstNumber: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  placeholder="Enter GST registration number"
-                />
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  UPI ID
-                </label>
-                <input
-                  type="text"
-                  value={restaurantData.upiId}
-                  onChange={(e) =>
-                    setRestaurantData({
-                      ...restaurantData,
-                      upiId: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  placeholder="your-upi@bank"
-                />
-              </div>
+
+
             </div>
 
             <div>
@@ -488,21 +497,22 @@ export function Settings() {
                 </label>
               </div>
 
+              {/* VAT Settings */}
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <h4 className="font-medium text-gray-900">Enable GST</h4>
+                  <h4 className="font-medium text-gray-900">Enable VAT</h4>
                   <p className="text-sm text-gray-600">
-                    Apply 18% GST to all orders
+                    Apply VAT to all orders (UAE rate: 5%)
                   </p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={systemSettings.enableGST}
+                    checked={systemSettings.enableVAT}
                     onChange={(e) =>
                       setSystemSettings({
                         ...systemSettings,
-                        enableGST: e.target.checked,
+                        enableVAT: e.target.checked,
                       })
                     }
                     className="sr-only peer"
@@ -510,6 +520,35 @@ export function Settings() {
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
                 </label>
               </div>
+
+              {systemSettings.enableVAT && (
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <h4 className="font-medium text-gray-900">VAT Rate</h4>
+                    <p className="text-sm text-gray-600">
+                      Percentage rate for VAT calculation
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      value={systemSettings.vatRate}
+                      onChange={(e) =>
+                        setSystemSettings({
+                          ...systemSettings,
+                          vatRate: parseFloat(e.target.value) || 0,
+                        })
+                      }
+                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    />
+                    <span className="text-gray-700">%</span>
+                  </div>
+                </div>
+              )}
+
             </div>
 
             <button

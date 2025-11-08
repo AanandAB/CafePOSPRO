@@ -8,10 +8,11 @@ const applicationTables = {
     name: v.string(),
     address: v.string(),
     gstNumber: v.optional(v.string()),
-    upiId: v.optional(v.string()),
     currency: v.string(),
     logo: v.optional(v.string()),
     theme: v.string(),
+    enableVAT: v.optional(v.boolean()),
+    vatRate: v.optional(v.number()),
   }),
 
   // Staff management
@@ -99,7 +100,7 @@ const applicationTables = {
     ),
     paymentStatus: v.union(v.literal("pending"), v.literal("paid")),
     paymentMode: v.optional(
-      v.union(v.literal("cash"), v.literal("upi"), v.literal("card"))
+      v.union(v.literal("cash"), v.literal("card"), v.literal("upi"))
     ),
     waiterId: v.optional(v.id("staff")),
     cashierId: v.optional(v.id("staff")),
@@ -126,7 +127,11 @@ const applicationTables = {
     discount: v.number(),
     tax: v.number(),
     finalAmount: v.number(),
-    paymentMode: v.string(),
+    paymentMode: v.union(
+      v.literal("cash"),
+      v.literal("card"),
+      v.literal("upi")
+    ),
     staffId: v.id("staff"),
     date: v.number(),
   })

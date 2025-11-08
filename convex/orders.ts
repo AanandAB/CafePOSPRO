@@ -168,12 +168,15 @@ export const createOrder = mutation({
     const orderNumber = `ORD-${Date.now()}`;
     const subtotal = args.items.reduce((sum, item) => sum + item.total, 0);
     
-    // Apply GST only if enabled (default to true if not specified)
-    const enableGST = args.enableGST !== false;
-    const tax = enableGST ? subtotal * 0.18 : 0; // 18% GST
+    // Get restaurant profile to determine VAT settings
+    const restaurant = await ctx.db.query("restaurant").first();
+    const enableVAT = restaurant?.enableVAT !== false; // Default to true if not specified
+    const vatRate = restaurant?.vatRate || 5; // Default to 5% (UAE rate) if not specified
+    const tax = enableVAT ? subtotal * (vatRate / 100) : 0;
     const tipAmount = args.tipAmount || 0; // Get tip amount
     const finalAmount = subtotal + tax + tipAmount;
 
+    // Only include waiterId in the order if it's a valid staff ID
     const orderData: any = {
       orderNumber,
       tableId: args.tableId,
@@ -186,7 +189,7 @@ export const createOrder = mutation({
       tax,
       tip: tipAmount, // Store tip amount in order
       finalAmount,
-      status: "active", // Set status to active
+      status: "active",
       paymentStatus: "pending",
       notes: args.notes,
     };
@@ -345,10 +348,11 @@ export const clearTableOrders = mutation({
     tableId: v.id("tables"),
   },
   handler: async (ctx, args) => {
-    // Get all orders for this table (regardless of status)
+    // Get all active orders for this table
     const orders = await ctx.db
       .query("orders")
       .withIndex("by_table", (q) => q.eq("tableId", args.tableId))
+      .filter((q) => q.eq(q.field("status"), "active"))
       .collect();
 
     // Mark all orders as cancelled
@@ -358,10 +362,9 @@ export const clearTableOrders = mutation({
       });
     }
 
-    // Clear the current order ID from the table and mark as available
+    // Clear the current order ID from the table
     await ctx.db.patch(args.tableId, {
       currentOrderId: undefined,
-      status: "available",
     });
 
     return { success: true, cancelledOrders: orders.length };

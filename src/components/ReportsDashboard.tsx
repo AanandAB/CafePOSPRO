@@ -5,6 +5,7 @@ import { ReportsNavigation } from "./ReportsNavigation";
 import { SalesReport } from "./SalesReport";
 import { InventoryReport } from "./InventoryReport";
 import { PerformanceReport } from "./PerformanceReport";
+import { UaeTaxReports } from "./UaeTaxReports"; // Add UAE tax reports import
 
 export function ReportsDashboard() {
   const [activeReport, setActiveReport] = useState("sales");
@@ -72,6 +73,8 @@ export function ReportsDashboard() {
             onDateChange={handleDateChange}
           />
         );
+      case "uaetax": // Add UAE tax reports case
+        return <UaeTaxReports />;
       default:
         return (
           <SalesReport
@@ -94,12 +97,12 @@ export function ReportsDashboard() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-amber-100 transition-all duration-300 hover:shadow-md">
+      <div className="bg-white rounded-xl shadow-sm border border-amber-100">
         <ReportsNavigation
           activeReport={activeReport}
           setActiveReport={setActiveReport}
         />
-        <div className="p-4 md:p-6">{renderActiveReport()}</div>
+        <div className="p-6">{renderActiveReport()}</div>
       </div>
     </div>
   );

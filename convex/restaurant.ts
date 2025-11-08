@@ -10,9 +10,10 @@ export const getRestaurantProfile = query({
       name: "My Café",
       address: "",
       gstNumber: "",
-      upiId: "",
-      currency: "₹",
+      currency: "$",
       theme: "coffee",
+      enableVAT: true,
+      vatRate: 5,
     };
   },
 });
@@ -22,9 +23,10 @@ export const updateRestaurantProfile = mutation({
     name: v.string(),
     address: v.string(),
     gstNumber: v.optional(v.string()),
-    upiId: v.optional(v.string()),
     currency: v.string(),
     theme: v.string(),
+    enableVAT: v.optional(v.boolean()),
+    vatRate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);

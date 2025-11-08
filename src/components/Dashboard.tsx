@@ -13,6 +13,7 @@ import { ReportsDashboard } from "./ReportsDashboard";
 import { TipManagement } from "./TipManagement";
 import { WaiterTips } from "./WaiterTips";
 import { StaffNotifications } from "./StaffNotifications";
+import { UaeTaxReports } from "./UaeTaxReports"; // Add UAE tax reports import
 
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -41,13 +42,13 @@ export function Dashboard({ currentView }: DashboardProps) {
       case "dashboard":
         return <DashboardOverview />;
       case "pos":
-        // POS system accessible to managers, cashiers, and waiters
-        if (!hasPermission(["manager", "cashier", "waiter"])) {
+        // POS system accessible to managers, waiters, and cashiers
+        if (!hasPermission(["manager", "waiter", "cashier"])) {
           return (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Access Denied
-              </h3>
+              </h2>
               <p className="text-gray-600">
                 You don't have permission to access the POS system.
               </p>
@@ -56,13 +57,13 @@ export function Dashboard({ currentView }: DashboardProps) {
         }
         return <POSSystem />;
       case "orders":
-        // Orders accessible to managers, cashiers, and waiters
-        if (!hasPermission(["manager", "cashier", "waiter"])) {
+        // Orders accessible to managers, waiters, and cashiers
+        if (!hasPermission(["manager", "waiter", "cashier"])) {
           return (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Access Denied
-              </h3>
+              </h2>
               <p className="text-gray-600">
                 You don't have permission to access orders.
               </p>
@@ -71,13 +72,13 @@ export function Dashboard({ currentView }: DashboardProps) {
         }
         return <OrderManagement />;
       case "inventory":
-        // Inventory accessible to managers
+        // Inventory accessible only to managers
         if (!hasPermission(["manager"])) {
           return (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Access Denied
-              </h3>
+              </h2>
               <p className="text-gray-600">
                 You don't have permission to access inventory management.
               </p>
@@ -86,13 +87,13 @@ export function Dashboard({ currentView }: DashboardProps) {
         }
         return <InventoryManagement />;
       case "tables":
-        // Tables accessible to managers, cashiers, and waiters
-        if (!hasPermission(["manager", "cashier", "waiter"])) {
+        // Tables accessible to managers, waiters, and cashiers
+        if (!hasPermission(["manager", "waiter", "cashier"])) {
           return (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Access Denied
-              </h3>
+              </h2>
               <p className="text-gray-600">
                 You don't have permission to access table management.
               </p>
@@ -101,13 +102,13 @@ export function Dashboard({ currentView }: DashboardProps) {
         }
         return <TableManagement />;
       case "staff":
-        // Staff management accessible to managers
+        // Staff management accessible only to managers
         if (!hasPermission(["manager"])) {
           return (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Access Denied
-              </h3>
+              </h2>
               <p className="text-gray-600">
                 You don't have permission to access staff management.
               </p>
@@ -116,13 +117,13 @@ export function Dashboard({ currentView }: DashboardProps) {
         }
         return <StaffManagement />;
       case "sales":
-        // Sales accessible to managers and cashiers
+        // Sales reports accessible to managers and cashiers
         if (!hasPermission(["manager", "cashier"])) {
           return (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Access Denied
-              </h3>
+              </h2>
               <p className="text-gray-600">
                 You don't have permission to access sales reports.
               </p>
@@ -130,29 +131,14 @@ export function Dashboard({ currentView }: DashboardProps) {
           );
         }
         return <SalesReports />;
-      case "reports":
-        // Reports accessible to managers
-        if (!hasPermission(["manager"])) {
-          return (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Access Denied
-              </h3>
-              <p className="text-gray-600">
-                You don't have permission to access reports.
-              </p>
-            </div>
-          );
-        }
-        return <ReportsDashboard />;
       case "analytics":
-        // Analytics accessible to managers
+        // Analytics accessible only to managers
         if (!hasPermission(["manager"])) {
           return (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Access Denied
-              </h3>
+              </h2>
               <p className="text-gray-600">
                 You don't have permission to access analytics.
               </p>
@@ -160,44 +146,14 @@ export function Dashboard({ currentView }: DashboardProps) {
           );
         }
         return <Analytics />;
-      case "feedback":
-        // Feedback accessible to managers
-        if (!hasPermission(["manager"])) {
-          return (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Access Denied
-              </h3>
-              <p className="text-gray-600">
-                You don't have permission to access feedback management.
-              </p>
-            </div>
-          );
-        }
-        return <FeedbackManagement />;
-      case "settings":
-        // Settings accessible to managers
-        if (!hasPermission(["manager"])) {
-          return (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Access Denied
-              </h3>
-              <p className="text-gray-600">
-                You don't have permission to access settings.
-              </p>
-            </div>
-          );
-        }
-        return <Settings />;
       case "kitchen":
-        // Kitchen view accessible to kitchen staff and managers
+        // Kitchen view accessible only to kitchen staff and managers
         if (!hasPermission(["manager", "kitchen"])) {
           return (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Access Denied
-              </h3>
+              </h2>
               <p className="text-gray-600">
                 You don't have permission to access the kitchen dashboard.
               </p>
@@ -205,14 +161,91 @@ export function Dashboard({ currentView }: DashboardProps) {
           );
         }
         return <KitchenView />;
-      case "tips":
-        // Tip management accessible to managers
+      case "notifications":
+        // Notifications view for waiters and managers
+        if (!hasPermission(["manager", "waiter"])) {
+          return (
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Access Denied
+              </h2>
+              <p className="text-gray-600">
+                You don't have permission to access notifications.
+              </p>
+            </div>
+          );
+        }
+        // Show notifications for staff members
+        if (actualStaffDetails?.id) {
+          return <StaffNotifications staffId={actualStaffDetails.id as unknown as Id<"staff">} />;
+        }
+        return (
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              Notifications
+            </h2>
+            <p className="text-gray-600">
+              Notifications will appear here when customers request service.
+            </p>
+          </div>
+        );
+      case "mytips":
+        // Waiter tips accessible only to waiters and managers
+        if (!hasPermission(["manager", "waiter"])) {
+          return (
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Access Denied
+              </h2>
+              <p className="text-gray-600">
+                You don't have permission to access tip information.
+              </p>
+            </div>
+          );
+        }
+        // For waiters, show their own tips; for managers, redirect to tip management
+        if (actualStaffDetails?.role === "waiter" && actualStaffDetails?.id) {
+          return <WaiterTips staffId={actualStaffDetails.id} />;
+        }
+        return <TipManagement />;
+      case "settings":
+        // Settings accessible only to managers
         if (!hasPermission(["manager"])) {
           return (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Access Denied
-              </h3>
+              </h2>
+              <p className="text-gray-600">
+                You don't have permission to access settings.
+              </p>
+            </div>
+          );
+        }
+        return <Settings />;
+      case "feedback":
+        // Feedback management accessible only to managers
+        if (!hasPermission(["manager"])) {
+          return (
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Access Denied
+              </h2>
+              <p className="text-gray-600">
+                You don't have permission to access feedback management.
+              </p>
+            </div>
+          );
+        }
+        return <FeedbackManagement />;
+      case "tips":
+        // Tip management accessible only to managers
+        if (!hasPermission(["manager"])) {
+          return (
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Access Denied
+              </h2>
               <p className="text-gray-600">
                 You don't have permission to access tip management.
               </p>
@@ -220,48 +253,40 @@ export function Dashboard({ currentView }: DashboardProps) {
           );
         }
         return <TipManagement />;
-      case "mytips":
-        // My tips accessible to waiters
-        if (!hasPermission(["waiter"])) {
+      case "reports":
+        // Reports accessible only to managers
+        if (!hasPermission(["manager"])) {
           return (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Access Denied
-              </h3>
+              </h2>
               <p className="text-gray-600">
-                You don't have permission to access your tips.
+                You don't have permission to access reports.
               </p>
             </div>
           );
         }
-        // Pass the staffId to the WaiterTips component
-        {
-          const staffId = actualStaffDetails ? (actualStaffDetails as any)._id || (actualStaffDetails as any).id || "" : "";
-          return <WaiterTips staffId={staffId} />;
-        }
-      case "notifications":
-        // Notifications accessible to waiters
-        if (!hasPermission(["waiter"])) {
+        return <ReportsDashboard />;
+      case "uaetax": // Add UAE tax reports case
+        // UAE tax reports accessible only to managers
+        if (!hasPermission(["manager"])) {
           return (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Access Denied
-              </h3>
+              </h2>
               <p className="text-gray-600">
-                You don't have permission to access notifications.
+                You don't have permission to access UAE tax reports.
               </p>
             </div>
           );
         }
-        // Pass the staffId to the StaffNotifications component
-        {
-          const notificationStaffId = actualStaffDetails ? (actualStaffDetails as any)._id || (actualStaffDetails as any).id || "" : "";
-          return <StaffNotifications staffId={notificationStaffId} />;
-        }
+        return <UaeTaxReports />;
       default:
         return <DashboardOverview />;
     }
   };
 
-  return <div className="h-full">{renderView()}</div>;
+  return <div className="space-y-6">{renderView()}</div>;
 }
