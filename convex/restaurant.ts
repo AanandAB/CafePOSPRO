@@ -27,6 +27,7 @@ export const updateRestaurantProfile = mutation({
     theme: v.string(),
     enableVAT: v.optional(v.boolean()),
     vatRate: v.optional(v.number()),
+    upiId: v.optional(v.string()), // Add the missing upiId field
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
