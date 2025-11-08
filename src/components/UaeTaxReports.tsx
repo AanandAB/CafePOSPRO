@@ -40,6 +40,7 @@ export function UaeTaxReports() {
   const [customEndDate, setCustomEndDate] = useState("");
   const [reportData, setReportData] = useState<TaxReportData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const salesRecords = useQuery(api.analytics.getSalesData);
   const restaurantProfile = useQuery(api.restaurant.getRestaurantProfile);
@@ -48,67 +49,81 @@ export function UaeTaxReports() {
   useEffect(() => {
     if (!salesRecords) return;
 
-    setLoading(true);
-    
-    // Determine date range
-    let startDate: Date;
-    let endDate = new Date();
-    
-    if (customStartDate && customEndDate) {
-      startDate = new Date(customStartDate);
-      endDate = new Date(customEndDate);
-    } else {
-      startDate = new Date();
-      switch (dateRange) {
-        case "week":
-          startDate.setDate(startDate.getDate() - 7);
-          break;
-        case "month":
-          startDate.setMonth(startDate.getMonth() - 1);
-          break;
-        case "quarter":
-          startDate.setMonth(startDate.getMonth() - 3);
-          break;
-        case "year":
-          startDate.setFullYear(startDate.getFullYear() - 1);
-          break;
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Determine date range
+      let startDate: Date;
+      let endDate = new Date();
+      
+      if (customStartDate && customEndDate) {
+        startDate = new Date(customStartDate);
+        endDate = new Date(customEndDate);
+        
+        // Validate dates
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          throw new Error("Invalid date range");
+        }
+      } else {
+        startDate = new Date();
+        switch (dateRange) {
+          case "week":
+            startDate.setDate(startDate.getDate() - 7);
+            break;
+          case "month":
+            startDate.setMonth(startDate.getMonth() - 1);
+            break;
+          case "quarter":
+            startDate.setMonth(startDate.getMonth() - 3);
+            break;
+          case "year":
+            startDate.setFullYear(startDate.getFullYear() - 1);
+            break;
+        }
       }
+
+      // Filter sales records by date range
+      const filteredRecords = salesRecords.filter(
+        (record: SalesRecord) => {
+          // Validate record date
+          if (!record.date) return false;
+          return record.date >= startDate.getTime() && record.date <= endDate.getTime();
+        }
+      );
+
+      // Calculate report data
+      const totalSales = filteredRecords.reduce((sum, record) => sum + (record.finalAmount || 0), 0);
+      const totalTax = filteredRecords.reduce((sum, record) => sum + (record.tax || 0), 0);
+      const taxableSales = filteredRecords.reduce((sum, record) => sum + (record.subtotal || 0), 0);
+      const transactions = filteredRecords.length;
+      
+      // For UAE, we'll assume all sales are taxable at the standard rate
+      // In a real implementation, you might have different categories
+      const exemptSales = 0;
+      const zeroRatedSales = 0;
+      const vatRate = restaurantProfile?.vatRate || 5;
+
+      const period = customStartDate && customEndDate 
+        ? `${format(new Date(customStartDate), "MMM dd, yyyy")} - ${format(new Date(customEndDate), "MMM dd, yyyy")}`
+        : `${format(startDate, "MMM dd, yyyy")} - ${format(endDate, "MMM dd, yyyy")}`;
+
+      setReportData({
+        period,
+        totalSales,
+        totalTax,
+        taxableSales,
+        exemptSales,
+        zeroRatedSales,
+        vatRate,
+        transactions
+      });
+    } catch (err) {
+      console.error("Error calculating tax report data:", err);
+      setError("Failed to calculate tax report data. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    // Filter sales records by date range
-    const filteredRecords = salesRecords.filter(
-      (record: SalesRecord) => 
-        record.date >= startDate.getTime() && record.date <= endDate.getTime()
-    );
-
-    // Calculate report data
-    const totalSales = filteredRecords.reduce((sum, record) => sum + record.finalAmount, 0);
-    const totalTax = filteredRecords.reduce((sum, record) => sum + record.tax, 0);
-    const taxableSales = filteredRecords.reduce((sum, record) => sum + record.subtotal, 0);
-    const transactions = filteredRecords.length;
-    
-    // For UAE, we'll assume all sales are taxable at the standard rate
-    // In a real implementation, you might have different categories
-    const exemptSales = 0;
-    const zeroRatedSales = 0;
-    const vatRate = restaurantProfile?.vatRate || 5;
-
-    const period = customStartDate && customEndDate 
-      ? `${format(new Date(customStartDate), "MMM dd, yyyy")} - ${format(new Date(customEndDate), "MMM dd, yyyy")}`
-      : `${format(startDate, "MMM dd, yyyy")} - ${format(endDate, "MMM dd, yyyy")}`;
-
-    setReportData({
-      period,
-      totalSales,
-      totalTax,
-      taxableSales,
-      exemptSales,
-      zeroRatedSales,
-      vatRate,
-      transactions
-    });
-
-    setLoading(false);
   }, [salesRecords, dateRange, customStartDate, customEndDate, restaurantProfile]);
 
   const exportToCSV = () => {
@@ -290,6 +305,12 @@ ${salesRecords?.map((record: SalesRecord) =>
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-900">UAE VAT Reports</h2>
       
+      {error && (
+        <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+          <p className="text-red-700">{error}</p>
+        </div>
+      )}
+      
       <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Generate VAT Report</h3>
         
@@ -424,6 +445,10 @@ ${salesRecords?.map((record: SalesRecord) =>
               Standard VAT rate for UAE as configured in restaurant settings
             </p>
           </div>
+        </div>
+      ) : !loading && !error ? (
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-amber-100">
+          <p className="text-gray-500 text-center">Select a date range to generate VAT report</p>
         </div>
       ) : null}
     </div>

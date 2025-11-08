@@ -144,28 +144,33 @@ export const getBusyHourAnalysis = query({
 export const getSalesData = query({
   args: {},
   handler: async (ctx) => {
-    // Get all sales records
-    const salesRecords = await ctx.db.query("sales").collect();
-    
-    // Map sales records to the format expected by UAE tax reports
-    return salesRecords.map(sale => ({
-      _id: sale._id,
-      orderId: sale.orderId,
-      orderNumber: sale.orderNumber,
-      tableNumber: sale.tableNumber,
-      items: sale.items.map(item => ({
-        itemName: item.itemName,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        total: item.total
-      })),
-      subtotal: sale.subtotal,
-      discount: sale.discount,
-      tax: sale.tax,
-      finalAmount: sale.finalAmount,
-      paymentMode: sale.paymentMode,
-      staffId: sale.staffId,
-      date: sale.date
-    }));
+    try {
+      // Get all sales records
+      const salesRecords = await ctx.db.query("sales").collect();
+      
+      // Map sales records to the format expected by UAE tax reports
+      return salesRecords.map(sale => ({
+        _id: sale._id,
+        orderId: sale.orderId,
+        orderNumber: sale.orderNumber || "",
+        tableNumber: sale.tableNumber || undefined,
+        items: sale.items?.map(item => ({
+          itemName: item.itemName || "",
+          quantity: item.quantity || 0,
+          unitPrice: item.unitPrice || 0,
+          total: item.total || 0
+        })) || [],
+        subtotal: sale.subtotal || 0,
+        discount: sale.discount || 0,
+        tax: sale.tax || 0,
+        finalAmount: sale.finalAmount || 0,
+        paymentMode: sale.paymentMode || "cash",
+        staffId: sale.staffId || "",
+        date: sale.date || Date.now()
+      }));
+    } catch (error) {
+      console.error("Error fetching sales data:", error);
+      return [];
+    }
   }
 });
