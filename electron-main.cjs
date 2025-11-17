@@ -1,6 +1,5 @@
 const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 
-
 const { spawn, spawnSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
@@ -113,7 +112,6 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, "electron-preload.js"),
     },
-    icon: path.join(__dirname, "src/assets/icon.png"),
   });
 
   mainWindow.loadFile("electron-ui.html");

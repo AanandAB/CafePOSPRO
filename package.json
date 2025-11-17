@@ -1,7 +1,7 @@
 {
-  "name": "flex-template",
+  "name": "cafepospro-manager",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "CafePOSPro - A complete point of sale system for cafes and restaurants",
   "author": "CafePOSPro Team",
   "type": "module",
@@ -20,6 +20,7 @@
     "db:backup:scheduled": "node scripts/scheduled-backup.cjs",
     "db:create-sample-sales": "node scripts/create-sample-sales.cjs",
     "test:app": "node scripts/test-app.mjs",
+    "test-electron": "electron test-electron.cjs",
     "deploy:setup": "npx @convex-dev/auth",
     "deploy": "npx convex deploy",
     "deploy:prod": "npx convex deploy --prod",
@@ -86,7 +87,10 @@
       }
     ],
     "win": {
-      "target": "nsis"
+      "target": [
+        "nsis",
+        "zip"
+      ]
     },
     "nsis": {
       "oneClick": false,
