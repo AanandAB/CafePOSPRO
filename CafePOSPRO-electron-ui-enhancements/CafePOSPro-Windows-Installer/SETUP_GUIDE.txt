@@ -1,0 +1,104 @@
+# CafePOSPro Windows Installer Guide
+
+## What's Included
+
+This installer package contains:
+- CafePOSPro application files
+- Installation script (install.bat)
+- Startup script (start.bat)
+- Technical Setup Guide (TECHNICAL_SETUP_GUIDE.txt)
+- Commands Reference (COMMANDS_REFERENCE.txt)
+- Documentation files
+
+## Installation Steps
+
+1. **Prerequisites Check**:
+   - Ensure Node.js is installed on your system
+   - If not installed, download it from https://nodejs.org/
+
+2. **Run the Installer**:
+   - Double-click `install.bat`
+   - Follow the on-screen instructions
+   - The installer will:
+     - Check for Node.js
+     - Create a CafePOSPro directory (C:\CafePOSPro)
+     - Extract application files
+     - Install dependencies
+     - Configure network access for multi-terminal use
+     - Create a desktop shortcut
+
+3. **Post-Installation Setup**:
+   - Create a Convex account at https://dashboard.convex.dev
+   - Configure your deployment settings in the `convex.json` file
+   - Run the authentication setup: `npx @convex-dev/auth`
+   - Configure environment variables in Convex dashboard
+   - Refer to TECHNICAL_SETUP_GUIDE.txt for detailed configuration
+
+## Starting CafePOSPro
+
+After installation, you can start CafePOSPro in two ways:
+1. Double-click the CafePOSPro icon on your desktop
+2. Navigate to C:\CafePOSPro and run start.bat
+
+The application will be available at:
+- Local: http://localhost:5173
+- Network: http://YOUR_LOCAL_IP:5173 (for multi-terminal access)
+
+## Multi-Terminal Configuration
+
+For multi-terminal access across devices:
+
+1. **Network Setup**:
+   - Ensure all devices are on the same WiFi network
+   - Find your computer's local IP address using `ipconfig` (Windows) or `ifconfig` (macOS/Linux)
+   - Access the application from other devices using: http://YOUR_LOCAL_IP:5173
+
+2. **Firewall Configuration**:
+   - Allow port 5173 through your firewall
+   - Windows: `netsh advfirewall firewall add rule name="CafePOSPro" dir=in action=allow protocol=TCP localport=5173`
+
+3. **Environment Variables**:
+   - Configure JWT_PRIVATE_KEY in Convex dashboard
+   - Set SITE_URL to your deployment URL
+   - Refer to TECHNICAL_SETUP_GUIDE.txt for detailed instructions
+
+## Troubleshooting
+
+### If Node.js is not detected:
+1. Download and install Node.js from https://nodejs.org/
+2. Restart your computer
+3. Run the installer again
+
+### If dependencies fail to install:
+1. Check the install.log file in the CafePOSPro directory
+2. Manually run `npm install` in the CafePOSPro directory
+3. Check your internet connection
+
+### If the application fails to start:
+1. Ensure no other applications are using port 5173
+2. Check the terminal output for error messages
+3. Verify all dependencies are installed correctly
+
+### Multi-Terminal Access Issues:
+1. Verify all devices are on the same network
+2. Check firewall settings on the host computer
+3. Confirm the local IP address is correct
+4. Refer to COMMANDS_REFERENCE.txt for network troubleshooting commands
+
+## Technical Resources
+
+- TECHNICAL_SETUP_GUIDE.txt - Complete technical setup instructions
+- COMMANDS_REFERENCE.txt - Quick reference for all important commands
+- CLIENT_DEPLOYMENT.md - Detailed client deployment instructions
+- DEPLOYMENT.md - Technical deployment guide
+- Documentation.md - Comprehensive system documentation
+
+## Support
+
+For technical support, please refer to the documentation files listed above.
+
+Contact the development team with:
+- Screenshots of any error messages
+- Steps to reproduce the issue
+- Convex function logs (available in the Convex dashboard)
+- Network configuration details

@@ -1,0 +1,44 @@
+{
+  "name": "cafepospro-installer",
+  "version": "1.0.0",
+  "description": "CafePOSPro Installation Package",
+  "main": "installer.js",
+  "scripts": {
+    "start": "node installer.js",
+    "build": "electron-builder --win --x64",
+    "dist": "electron-builder --win --x64"
+  },
+  "build": {
+    "appId": "com.cafepospro.installer",
+    "productName": "CafePOSPro Installer",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "publisherName": "CafePOSPro"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "CafePOSPro Installer"
+    }
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.10",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "electron": "^38.4.0",
+    "electron-builder": "^26.0.12"
+  }
+}

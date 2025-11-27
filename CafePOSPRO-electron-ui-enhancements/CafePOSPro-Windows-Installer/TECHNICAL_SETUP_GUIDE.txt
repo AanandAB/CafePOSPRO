@@ -1,0 +1,294 @@
+# CafePOSPro Technical Setup Guide for Multi-Terminal Deployment
+
+## Overview
+
+This guide provides detailed technical instructions for setting up CafePOSPro with Convex for multi-terminal deployment. This includes configuring development URLs, JWT tokens, and enabling access from multiple devices on the same network.
+
+## Prerequisites
+
+1. **Node.js** (version 16 or higher)
+2. **npm** (comes with Node.js)
+3. **Convex Account** - Free account at https://dashboard.convex.dev
+4. **Multiple devices** for multi-terminal access (optional but recommended)
+
+## Step-by-Step Technical Setup
+
+### Step 1: Install Dependencies
+
+```bash
+# Navigate to the CafePOSPro directory
+cd CafePOSPro-App
+
+# Install all required dependencies
+npm install
+
+# Verify installation
+npm list
+```
+
+### Step 2: Convex Account Setup
+
+1. Visit https://dashboard.convex.dev
+2. Create a new account or sign in
+3. Create a new project (note the project name, e.g., `my-cafe-pos-123`)
+4. (Optional) Create a team if multiple people will manage the account
+
+### Step 3: Configure Project Settings
+
+Update the `convex.json` file with your deployment information:
+
+```json
+{
+  "project": "YOUR_PROJECT_NAME_HERE",
+  "team": "YOUR_TEAM_NAME_IF_APPLICABLE"
+}
+```
+
+### Step 4: Authentication Setup
+
+Run the authentication configuration:
+
+```bash
+# Configure authentication for your deployment
+npx @convex-dev/auth
+
+# This will:
+# - Generate JWT keys for your deployment
+# - Update authentication configuration files
+# - Create a .env.local file with JWT secrets
+```
+
+### Step 5: Environment Variable Configuration
+
+After running the auth setup, you'll need to configure environment variables in your Convex dashboard:
+
+1. Go to your Convex project dashboard
+2. Navigate to "Environment Variables" section
+3. Add these required variables:
+
+```
+JWT_PRIVATE_KEY=YOUR_GENERATED_PRIVATE_KEY
+SITE_URL=https://YOUR_PROJECT_NAME.convex.cloud
+DEV_URL=http://localhost:5173
+```
+
+The `JWT_PRIVATE_KEY` can be found in your `.env.local` file after running the auth setup.
+
+### Step 6: Multi-Terminal Network Configuration
+
+To enable access from multiple devices on the same network:
+
+1. **Find your local IP address**:
+   ```bash
+   # On Windows (PowerShell)
+   ipconfig
+   
+   # On macOS/Linux
+   ifconfig
+   ```
+
+2. **Update network configuration** in `vite.config.ts`:
+   ```typescript
+   export default defineConfig({
+     server: {
+       host: '0.0.0.0',  // Allows external connections
+       port: 5173,
+     },
+     // ... other configuration
+   })
+   ```
+
+3. **Firewall Configuration**:
+   - Ensure port 5173 is open in your firewall
+   - Windows: Allow Node.js or port 5173 through Windows Firewall
+   - macOS: System Preferences > Security & Privacy > Firewall
+   - Linux: Configure iptables or ufw to allow port 5173
+
+### Step 7: Start Development Server
+
+```bash
+# Start the development server with network access
+npm run dev
+
+# The server will be accessible at:
+# - Local: http://localhost:5173
+# - Network: http://YOUR_LOCAL_IP:5173 (e.g., http://192.168.1.100:5173)
+```
+
+### Step 8: Multi-Terminal Access Setup
+
+For multi-terminal access, each device needs to:
+
+1. **Connect to the same WiFi network**
+2. **Access the application** using the local IP address:
+   - Open browser on each device
+   - Navigate to `http://YOUR_LOCAL_IP:5173`
+   - Example: `http://192.168.1.100:5173`
+
+### Step 9: Deploy to Production
+
+When ready for production deployment:
+
+```bash
+# Login to Convex (if not already logged in)
+npx convex login
+
+# Deploy to your Convex project
+npx convex deploy
+
+# The application will be available at:
+# https://YOUR_PROJECT_NAME.convex.cloud
+```
+
+### Step 10: Production Environment Variables
+
+In the Convex dashboard, update environment variables for production:
+
+```
+JWT_PRIVATE_KEY=YOUR_GENERATED_PRIVATE_KEY
+SITE_URL=https://YOUR_PROJECT_NAME.convex.cloud
+```
+
+## Advanced Multi-Terminal Configuration
+
+### Real-Time Synchronization
+
+CafePOSPro automatically synchronizes data across all connected terminals in real-time:
+- Orders appear immediately on all devices
+- Inventory updates propagate instantly
+- Staff notifications are sent to all relevant terminals
+
+### Role-Based Access Control
+
+Different terminals can be configured for different staff roles:
+- **Manager Terminal**: Full access to all features
+- **Cashier Terminal**: Order processing and payment handling
+- **Waiter Terminal**: Table management and order taking
+- **Kitchen Terminal**: Order preparation and status updates
+
+### Network Optimization
+
+For optimal performance across multiple terminals:
+
+1. **Use 5GHz WiFi** when available for faster connections
+2. **Ensure adequate bandwidth** for simultaneous users
+3. **Position devices** close to WiFi access points
+4. **Monitor network performance** during peak usage
+
+## Troubleshooting Common Issues
+
+### Issue 1: "Network Error" on Other Devices
+
+**Solution**:
+```bash
+# Ensure the development server allows external connections
+# Check vite.config.ts has host: '0.0.0.0'
+
+# Verify firewall settings
+# Windows: netsh advfirewall firewall add rule name="CafePOSPro" dir=in action=allow protocol=TCP localport=5173
+```
+
+### Issue 2: Authentication Errors
+
+**Solution**:
+```bash
+# Re-run authentication setup
+npx @convex-dev/auth
+
+# Verify environment variables in Convex dashboard
+# Ensure JWT_PRIVATE_KEY matches .env.local
+```
+
+### Issue 3: Slow Performance on Multiple Terminals
+
+**Solution**:
+```bash
+# Check network connectivity
+ping YOUR_LOCAL_IP
+
+# Monitor resource usage
+# CPU, Memory, and Network utilization
+
+# Consider upgrading network infrastructure if needed
+```
+
+### Issue 4: "Port Already in Use" Error
+
+**Solution**:
+```bash
+# Kill processes using port 5173
+# Windows:
+taskkill /f /im node.exe
+
+# macOS/Linux:
+lsof -i :5173
+kill -9 PID
+
+# Or start on a different port
+npm run dev -- --port 5174
+```
+
+## Security Considerations
+
+### Local Network Security
+- Use strong WiFi passwords
+- Enable WPA3 encryption when available
+- Regularly update router firmware
+
+### Data Protection
+- Enable HTTPS in production
+- Use strong, unique passwords for staff accounts
+- Regular backups of critical data
+
+### Access Control
+- Configure appropriate staff roles and permissions
+- Regular audit of user access
+- Monitor login attempts
+
+## Maintenance and Updates
+
+### Regular Updates
+```bash
+# Pull latest code changes
+git pull origin main
+
+# Update dependencies
+npm install
+
+# Redeploy to Convex
+npx convex deploy
+```
+
+### Monitoring
+- Check Convex dashboard for function performance
+- Monitor database usage and query performance
+- Review error logs regularly
+
+### Backups
+```bash
+# Create regular backups
+npm run db:backup
+
+# Store backups in multiple locations
+# Test restoration procedures periodically
+```
+
+## Support Resources
+
+### Official Documentation
+- Convex Documentation: https://docs.convex.dev
+- Vite Documentation: https://vitejs.dev/guide/
+- React Documentation: https://react.dev/learn
+
+### Getting Help
+For technical support, contact the development team with:
+- Screenshots of any error messages
+- Steps to reproduce the issue
+- Convex function logs (available in the Convex dashboard)
+- Network configuration details
+- Device specifications and browser information
+
+### Community Support
+- Convex Discord Community
+- CafePOSPro GitHub Issues
+- Stack Overflow (tag: convex, react, vite)
